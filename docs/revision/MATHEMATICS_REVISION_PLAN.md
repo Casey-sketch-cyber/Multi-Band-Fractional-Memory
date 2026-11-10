@@ -1,6 +1,6 @@
 # 面向 *Mathematics*（MDPI）的修订计划
 
-- 版本：v1，2026-11-10，起草者 Claude（分支 `claude/mathematics-revision-plan`）
+- 版本：v1.1，2026-11-10，起草者 Claude（分支 `claude/mathematics-revision-plan`）。v1.1 写入作者对第 11 节的答复：常规投稿、原运行数据已丢失需从头重建、第二数据集用 LAFAN1
 - 适用对象：接手本仓库的任何智能体（Codex、Cursor、Claude、Grok 等）和作者
 - 前置阅读：[AGENTS.md](../../AGENTS.md) → [PROGRESS.md](../PROGRESS.md) → [ARCHITECTURE.md](../ARCHITECTURE.md) → [DECISIONS.md](../DECISIONS.md)
 
@@ -19,6 +19,8 @@
 
 **不承诺的事**：录用取决于实验结果和审稿人，本计划不保证录用。计划保证的是：按它做完后，稿件的每个主张都有对应证据，且第 2 节列的七个问题都有回应。
 
+**投稿方式**：常规投稿，不走特刊（作者 2026-11-10 确认）。
+
 **期刊情况**（2026-11-10 查自[科研通期刊页](https://www.ablesci.com/journal/detail?id=5kPKjD)，投稿前由 T5.6 复核）：影响因子 2.3，JCR 数学类 Q1，中科院 2025 版数学大类 4 区，近三版预警名单未列入。
 
 **一句话价值主张**：把"分数阶比有限窗好 0.279%"换成"一个端点精确、无目标泄漏的记忆核桥接算子，配套解析性质，并用一个包含幂律、指数、均匀窗的统一核族回答'长缺口修复到底需要什么样的时间记忆'"。
@@ -35,7 +37,7 @@
 | D4 | "有限窗有硬边界"的批评同样适用于自己 | GL 核在 K=97 处硬截断，截断处权重仍是首项的 1/139（阶 0.225）、1/17（0.5）、1/3.3（0.775） | T2.1（回火核） |
 | D5 | 5.3% 的主体增益没有归因 | "有限桥对原路由器 +5.293%"同时包含适配器、端点桥和额外训练步数。代码里的 `continued` 对照没有进正文。适配器里的 1×1 投影是跨通道的，可见关节速度可以直接线性映射到缺失关节，这条通路与核形状无关 | T0.2、T3.1 |
 | D6 | "端点精确"的说法偏强 | 端点为零只对输入侧修正量 C 成立。TCN 的输出残差没有端点约束，最终预测在缺口两端的跳变没有被控制或度量 | T2.3、T2.4 |
-| D7 | 外部有效性与基线不足 | 正文没有线性、样条、低秩、BiGRU、Transformer 的数字，没有任何已发表方法；单一数据集、合成缺口；误差只有躯干归一化单位；"DanceRouter"无出处；128 帧窗内 72 帧缺口只剩 56 帧可见，谈不上长记忆 | T2.4–T2.8、T3.3–T3.6 |
+| D7 | 外部有效性与基线不足 | 正文没有线性、样条、低秩、BiGRU、Transformer 的数字，没有任何已发表方法；单一数据集、合成缺口；误差只有躯干归一化单位；"DanceRouter"未发表、无出处；128 帧窗内 72 帧缺口只剩 56 帧可见，谈不上长记忆；AIST++ 官方建议剔除的 `ignore_list.txt` 序列没有处理 | T0.1、T2.4–T2.10、T3.3–T3.6 |
 | D8 | 叙事与数学含量 | 摘要先讲宽假设失败再收窄，读起来像事后挑条件；数学部分只有系数递推和一个端点恒等式 | T1.x、T5.x |
 
 说明：D3 中"97 抽头窗被消掉"指的是**本通道**贡献，且对缺口居中的情形是精确为零、对一般起点是明显变小（合成信号上中位数约为 GL(0.5) 的 0.2–0.4 倍，96 帧缺口时两者相当）。跨通道贡献不受此影响。真实数据上的比例由 T0.3 测量，论文只引用 T0.3 的数。
@@ -70,7 +72,7 @@
 - S1：*Tempered Fractional Memory Kernels with Exact Endpoint Constraints for Long-Gap Imputation of Skeletal Motion Sequences*
 - S2/S3：*Endpoint-Constrained Kernel Bridges for Long-Gap Skeletal Motion Imputation: Operator Analysis and a Controlled Comparison of Memory Profiles*
 
-去掉"Dance"是因为方法与舞蹈无关。能不能去掉取决于 T3.6（第二个数据集）是否完成；没完成就保留"with Application to Dance Motion Capture"副标题。
+去掉"Dance"是因为方法与舞蹈无关。能不能去掉取决于 T3.6（LAFAN1 上的实验）是否完成；没完成就保留"with Application to Dance Motion Capture"副标题。
 
 ## 4. 数学内容（写进新稿第 3–4 节和附录 A）
 
@@ -150,7 +152,20 @@ P1–P3 已由 [check_kernel_claims.py](check_kernel_claims.py) 数值核对通�
 
 ## 5. 方法与代码改动
 
-所有改动在 `fractional_motion_repair/src/` 内完成，保持旧检查点可加载、`smoke_fractional.py` 通过。
+所有改动在 `fractional_motion_repair/src/` 内完成，`smoke_fractional.py` 必须通过。原训练产物已丢失，不需要兼容旧检查点，但 `integer`、`fractional` 两个 mode 的数值行为要与现代码一致，这样重建的管线才能与归档的汇总结果对照。
+
+### 5.1 数据（两个数据集都能直接下载，不需要注册）
+
+| 数据集 | 用途 | 获取方式 | 大小 | 备注 |
+|---|---|---|---|---|
+| AIST++ 标注 | 主数据集 | GitHub 发布页 `google/aistplusplus_dataset` 的 v1.0：`keypoints3d.zip`、`keypoints2d.zip`（下载入口见[官方下载页](https://google.github.io/aistplusplus_dataset/download.html)） | 834 MB + 1.2 GB | 遵守 AIST Dance Video Database 使用条款；官方建议剔除 `ignore_list.txt` 里的序列 |
+| LAFAN1 | 第二数据集（非舞蹈为主） | GitHub 仓库 `ubisoft/ubisoft-laforge-animation-dataset` 的 `lafan1/lafan1.zip`，经 Git LFS 下载 | 144 MB | 5 名受试者、77 条序列、496,672 帧、30 fps、BVH；许可 CC BY-NC-ND 4.0；运动中间帧生成的常用基准 |
+
+两个数据集和由它们生成的缓存都不进仓库（`.gitignore` 已忽略 `/data/`），LAFAN1 仓库里的代码也不复制进来。下载后把文件名、字节数和 SHA-256 记进 `PROGRESS.md`。
+
+解压后的目录要满足 `build_raw_cache.py` 的默认参数：`data/aistpp/annotations/keypoints3d/*.pkl` 和 `data/keypoints2d.zip`（内部成员为 `keypoints2d/*.pkl`）。压缩包内部结构以实际下载为准，不一致就用命令行参数指定路径，不改默认值。
+
+### 5.2 代码
 
 - **核族**（T2.1）：`TemporalMemoryAdapter` 增加 `mode`：`instant`、`integer`（保留）、`fractional`（保留）、`exponential`、`tempered`、`free`。`tempered` 每带两个标量参数（β ∈ (0,1]，λ ≥ 0），跨关节共享，理由是现稿的阶数消融显示逐关节学习阶没有收益。`free` 是每带一个 softmax 参数化的 97 抽头非负核。有限窗增加可配置窗宽。
 - **提速**（T2.2）：阶固定或跨关节共享时缓存系数；三个带合并成一次分组卷积。目标是把分数阶路径的延迟降到接近有限窗路径，实测为准。
@@ -165,13 +180,19 @@ P1–P3 已由 [check_kernel_claims.py](check_kernel_claims.py) 数值核对通�
 - **交叉验证**（T2.5）：`grouped_split` 增加折号参数，按"流派 + 编舞"分组做 5 折。
 - **真实遮挡掩码**（T2.6）：用缓存里的 `confidence_f16.npy`（9 个机位的 2D 检测置信度）模拟少机位采集：选定 1–2 个机位，关节在所选机位置信度都低于阈值时记为缺失。先统计缺口长度分布（T2.6a），长缺口样本不足时改为"把真实缺失模式移植到其他序列"，仍不足就如实写进局限。
 - **长窗口**（T2.7）：256 帧窗口，TCN 膨胀加到 64，重训基础专家，评估 96–192 帧缺口。
+- **骨架配置**（T2.9）：`pilot.py` 里的 `BODY_EDGES`、`LIMB_GROUPS` 和各处的 17 关节默认值是按 COCO 骨架写死的。抽成一个骨架配置（关节数、骨骼边、肢体分组、归一化用的参考长度），AIST++ 配置必须给出与现在完全相同的结果。
+- **LAFAN1 读入**（T2.10）：BVH 经正向运动学得到 22 个关节的全局位置，以髋为中心，按骨架参考长度归一化，同时保留厘米单位。保持原生 30 fps，不重采样；缺口长度沿用帧数网格，论文里同时给出秒数。LAFAN1 没有 2D 置信度，只做合成缺口。
 - **基线**（T2.8）：线性、PCHIP 或三次样条、Hankel 低秩、BiGRU、Transformer、Patch Transformer（后四个 `pilot.py` 已有）；BRITS、SAITS、GRU-D 用 PyPOTS，依赖写进单独的 `requirements-baselines.txt`。可选一个有公开代码的运动补全方法，两个工作日内复现不了就放弃并在文中说明。
 
 ## 6. 实验协议（T0.4 写成协议文件并在跑任何新实验前提交）
 
 协议文件：`fractional_motion_repair/protocols/mathematics_revision_protocol.md`。以下是它必须包含的内容。
 
-**数据与划分**：AIST++ 全部 1,408 条序列，按编舞分组的 5 折交叉验证，每条序列恰好被留出一次。每折内再留一部分训练编舞做验证，用于选检查点。旧的 221 条固定测试集结果保留为附录里的"早期固定划分研究"，标签不变。
+**数据与划分**：
+
+- AIST++：按编舞分组的 5 折交叉验证，每条序列恰好被留出一次。每折内再留一部分训练编舞做验证，用于选检查点。主分析剔除官方 `ignore_list.txt` 中的序列（训练和评估都剔除），另做一次包含全部 1,408 条序列的敏感性分析。
+- LAFAN1：按受试者留一的 5 折交叉验证。其中"受试者 1–4 训练、受试者 5 测试"这一折是文献里的标准划分，单独列出以便与已有工作对照。
+- 旧的 221 条固定测试集结果保留为附录里的"早期固定划分研究"，标签不变。
 
 **随机性**：每折 3 个训练种子为底线，算力允许扩到 5 个。评估掩码种子固定且所有方法共用。
 
@@ -211,9 +232,10 @@ P1–P3 已由 [check_kernel_claims.py](check_kernel_claims.py) 数值核对通�
 | ID | 任务 | 依赖 | 需 GPU | 产出 | 验收 | 状态 |
 |---|---|---|---|---|---|---|
 | T0.0 | 给当前 `main` 打标签 `v1-fractalfract-submission` | 无 | 否 | git tag | 标签指向计划合并前的归档提交 | 待办 |
-| T0.1 | 找到三个种子的 `runs/base_seed*`、`runs/fractional_seed*` 目录，核对检查点和 `screen_results.csv` 是否齐全；不齐就按 `fractional_motion_repair/README.md` 重跑 | 无 | 视情况 | `PROGRESS.md` 里记录路径和缺失项 | 三个种子的检查点可加载 | 待办 |
-| T0.2 | 取出或补训 `continued`、`fractional_loss` 两个变体，在验证集上与 `integer_memory`、`fractional_memory` 对比 | T0.1 | 是 | `results/revision/attribution_validation.csv` | 表里有五个条件、三个种子、相对 `continued` 的增益 | 待办 |
-| T0.3 | 在验证集上逐带测量桥修正量的能量（本通道与跨通道分开），以及均匀窗盲区帧的实际占比 | T0.1 | 是 | `results/revision/band_diagnostics.csv` | 能回答 D3、D5 在真实数据上是否成立 | 待办 |
+| T0.1 | 按 5.1 节下载 AIST++ 标注，运行 `build_raw_cache.py` 和 `verify_raw_cache.py`；取得 `ignore_list.txt` | 无 | 否 | `data/raw60/`（不进仓库）；`PROGRESS.md` 里记录文件名、字节数、SHA-256 | 缓存为 1,408 条序列、1,123,873 帧，与 `results/split_summary.json` 一致 | 待办 |
+| T0.1b | 在旧的固定划分上重建管线：三个种子重训基础专家（`raw_suite.py`），再训 `continued`、`fractional_loss`、`integer_memory`、`fractional_memory`、`fractional_memory_loss`，跑一次旧的测试脚本 | T0.1 | 是 | `runs/`（不进仓库）；`results/revision/pipeline_rebuild_check.csv` | 单肢 72 帧上三种方法的 MPJPE 与归档 `results/main_results.csv` 相对偏差不超过 2%；超出就先排查数据版本和预处理，不往下做。这是复现性检查，不是新的检验 | 待办 |
+| T0.2 | 用 T0.1b 的运行结果，在验证集上比较 `continued`、`fractional_loss`、`integer_memory`、`fractional_memory` | T0.1b | 是 | `results/revision/attribution_validation.csv` | 表里有五个条件、三个种子、相对 `continued` 的增益 | 待办 |
+| T0.3 | 在验证集上逐带测量桥修正量的能量（本通道与跨通道分开），以及均匀窗盲区帧的实际占比 | T0.1b | 是 | `results/revision/band_diagnostics.csv` | 能回答 D3、D5 在真实数据上是否成立 | 待办 |
 | T0.4 | 按第 6 节写协议文件并提交 | 无 | 否 | `protocols/mathematics_revision_protocol.md` | 在任何阶段 3 实验之前合并 | 待办 |
 
 ### 阶段 1：数学（不需要数据）
@@ -227,7 +249,7 @@ P1–P3 已由 [check_kernel_claims.py](check_kernel_claims.py) 数值核对通�
 
 | ID | 任务 | 依赖 | 产出 | 验收 | 状态 |
 |---|---|---|---|---|---|
-| T2.1 | 核族重构（第 5 节） | 无 | `fractional_models.py`、扩展的烟雾测试 | 旧检查点加载后输出不变；β = 1、λ = 0 的回火核与 97 抽头均匀窗输出一致；隐藏目标不变性对所有 mode 成立 | 待办 |
+| T2.1 | 核族重构（5.2 节） | 无 | `fractional_models.py`、扩展的烟雾测试 | 固定随机种子下 `integer`、`fractional` 两个 mode 的输出与重构前逐元素一致；β = 1、λ = 0 的回火核与 97 抽头均匀窗输出一致；隐藏目标不变性对所有 mode 成立 | 待办 |
 | T2.2 | 系数缓存与单次卷积 | T2.1 | 代码、更新的延迟基准 | 数值与未优化版一致；延迟写入 `results/revision/efficiency.csv` | 待办 |
 | T2.3 | 输出侧端点投影（B3）和不去趋势对照（B1） | T2.1 | 代码、测试 | 修正量在端点为零的单元测试通过 | 待办 |
 | T2.4 | 评估指标扩展 | 无 | 评估代码 | 毫米单位经一条已知序列手算核对 | 待办 |
@@ -235,6 +257,8 @@ P1–P3 已由 [check_kernel_claims.py](check_kernel_claims.py) 数值核对通�
 | T2.6 | 真实遮挡掩码（先做 T2.6a 统计） | 无 | 代码、`results/revision/occlusion_stats.csv` | 报告缺口长度分布和各关节缺失率 | 待办 |
 | T2.7 | 256 帧窗口支持 | T2.1 | 代码 | 烟雾测试在 256 帧下通过 | 待办 |
 | T2.8 | 基线接入 | T2.4、T2.5 | 代码、`requirements-baselines.txt` | 每个基线在一折上跑通并出数 | 待办 |
+| T2.9 | 骨架配置抽象 | 无 | 代码 | AIST++ 配置下固定种子的掩码、损失和指标与抽象前逐元素一致 | 待办 |
+| T2.10 | LAFAN1 下载、读入和缓存 | T2.9 | 代码；`PROGRESS.md` 里记录字节数和 SHA-256 | 77 条序列、496,672 帧；随机抽一条序列画骨架图人工核对；骨长在序列内恒定 | 待办 |
 
 ### 阶段 3：实验（需 GPU，全部遵守 T0.4 的协议）
 
@@ -245,7 +269,7 @@ P1–P3 已由 [check_kernel_claims.py](check_kernel_claims.py) 数值核对通�
 | T3.3 | 所选方法对全部基线的主表 | T2.8、T3.1、T3.2、G1 | `results/revision/main_table.csv` | 待办 |
 | T3.4 | 时长响应曲线，含全部核变体 | T3.2 | `results/revision/duration_response.csv` | 待办 |
 | T3.5 | 真实遮挡掩码评估 | T2.6、T3.3 | `results/revision/realistic_occlusion.csv` | 待办 |
-| T3.6 | 第二个数据集（见第 11 节 U3） | T3.3、U3 | `results/revision/second_dataset.csv` | 待办 |
+| T3.6 | LAFAN1：桥变体、核变体和主表各跑一遍（留一受试者 5 折） | T2.10、T3.3 | `results/revision/lafan1_*.csv` | 待办 |
 | T3.7 | 256 帧窗口、96–192 帧缺口 | T2.7、T3.2 | `results/revision/long_window.csv` | 待办 |
 | T3.8 | 效率：延迟、显存、参数量 | T2.2 | `results/revision/efficiency.csv` | 待办 |
 
@@ -266,12 +290,12 @@ P1–P3 已由 [check_kernel_claims.py](check_kernel_claims.py) 数值核对通�
 | T5.2 | 按第 9 节写正文；数字全部来自 `results/revision/` | G1、阶段 3 | 稿件 | 待办 |
 | T5.3 | 主张与证据核对表：每个主张一行，写明出处文件和行 | T5.2 | `submission_mathematics/CLAIMS_EVIDENCE.md` | 待办 |
 | T5.4 | 引用核对：新增文献逐条按 `submission/CITATION_VERIFICATION.md` 的做法核对 | T5.2 | 核对报告 | 待办 |
-| T5.5 | 数据可用性链接改为本仓库；生成式 AI 使用声明按实际使用范围如实填写，由作者逐项确认 | T5.2 | 稿件对应段落 | 待办 |
-| T5.6 | 投稿前复核期刊信息、特刊范围、版面费，写投稿信 | U1 | 投稿信 | 待办 |
+| T5.5 | 数据可用性声明写明 AIST++ 和 LAFAN1 的官方获取地址与许可，代码链接改为本仓库；生成式 AI 使用声明按实际使用范围如实填写，由作者逐项确认 | T5.2 | 稿件对应段落 | 待办 |
+| T5.6 | 投稿前复核期刊信息、所投 Section、版面费，写常规投稿的投稿信 | T5.2 | 投稿信 | 待办 |
 
 ## 8. 决策门
 
-**G0（T0.2、T0.3 完成后）**：看输入侧桥对 `continued` 在验证集单肢 72 帧上的净增益。
+**G0（T0.1b 通过，且 T0.2、T0.3 完成后）**：看输入侧桥对 `continued` 在验证集单肢 72 帧上的净增益。可以先跑一个种子看趋势，但过门要三个种子。
 
 - ≥ 1% 且三个种子同号：桥是稿件主角，继续。
 - 0.3%–1%：桥是组件之一，T2.3（输出侧投影）和 T3.7（长窗口）优先级提到最高。
@@ -287,7 +311,9 @@ P1–P3 已由 [check_kernel_claims.py](check_kernel_claims.py) 数值核对通�
 
 **摘要**：先讲问题和算子，再讲解析性质，再讲受控比较的结论和适用边界。不在摘要里叙述假设的收窄过程，这部分放 6 节和附录 B。负面结果（哪种条件下无益）必须出现在摘要里。
 
-**基础系统**：把短缺口专家、长缺口专家和时长路由完整写清楚，不再出现没有出处的"DanceRouter"名称，除非 U4 确认它有可引用的出处。
+**全文重写**：作者已确认新稿全文重写，不在旧稿上修补。旧稿只作为事实和数字的来源。
+
+**基础系统**："DanceRouter"没有发表过，新稿不用这个名称，也不引用它。把短缺口专家、长缺口专家和时长路由作为本文的基础架构完整写清楚，称为"时长路由的双专家基线"。
 
 **措辞**：效应量和置信区间一起给；机制解释与直接结果分开写；不写"首次""显著优于"这类没有数字支撑的话。
 
@@ -298,21 +324,24 @@ P1–P3 已由 [check_kernel_claims.py](check_kernel_claims.py) 数值核对通�
 | 分数阶/回火核不胜出 | H2 落入等效区间 | 走 S2 或 S3 线，结论照实写 |
 | 桥的净增益小 | G0 < 0.3% | 停，交作者决定 |
 | 强基线全面更好 | G2 触发 | 检验桥能否作为通用输出层 |
-| 原运行目录丢失 | T0.1 找不到 | 按 README 重跑，耗时记入 `PROGRESS.md` |
+| 原运行数据已丢失（已确认） | 重建的数值与归档汇总对不上 | T0.1b 设 2% 容差；对不上就先排查，旧数字只以"归档汇总值"的身份进附录 |
+| LAFAN1 上结论与 AIST++ 不一致 | T3.6 的方向相反或效应消失 | 照实报告为适用边界；题目保留舞蹈限定 |
 | 2D 置信度不能反映遮挡 | T2.6a 里长缺口极少 | 改用模式移植，或写进局限 |
 | 长记忆诊断不稳 | 不同估计量结论相反 | 按 T4.2 止损 |
 | 审稿人认为数学含量不足 | — | P1–P3 有完整证明；P2 的界和 P3 的零空间结论是现稿没有的 |
 
-## 11. 需要作者决定
+## 11. 作者答复（2026-11-10）
 
-| ID | 事项 |
-|---|---|
-| U1 | *Mathematics* 邀稿对应的特刊或 Section 名称、截稿日期 |
-| U2 | 实验服务器上三个种子的运行目录是否还在（T0.1） |
-| U3 | 第二个数据集选哪个：CMU Mocap（免费，需做骨架映射）或 Human3.6M（需注册许可） |
-| U4 | "DanceRouter"是否已发表或在审；它与 StreetStyle 仓库另一篇稿件的内容边界 |
-| U5 | 作者名单、单位、基金号、CRediT 角色有无变化 |
-| U6 | 投稿信里是否说明本稿是在 *Fractal and Fractional* 拒稿后大幅重做的版本（同属 MDPI，编辑部查得到，建议说明） |
+| ID | 事项 | 答复 | 落实位置 |
+|---|---|---|---|
+| U1 | 特刊或 Section | 不是特刊，常规投稿 | 第 1 节、T5.6 |
+| U2 | 原运行目录 | 服务器上的数据已不在，需要重新下载数据并从头重建 | 5.1 节、T0.1、T0.1b |
+| U3 | 第二个数据集 | 要公开、免注册、能直接下载、体积不大的；据此选定 LAFAN1 | 5.1 节、T2.9、T2.10、T3.6 |
+| U4 | "DanceRouter"出处 | 没有发表 | 第 9 节"基础系统" |
+| U5 | 作者信息 | 作者自行处理，智能体不用管 | — |
+| U6 | 投稿信是否说明前次拒稿 | 作者自行处理，智能体不用管 | — |
+
+目前没有待作者答复的事项。下一个需要作者拍板的地方是决策门 G0。
 
 ## 12. 候选新增文献（引用前必须由 T5.4 逐条核对，下面只是检索线索）
 
