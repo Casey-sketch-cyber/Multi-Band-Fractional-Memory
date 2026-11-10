@@ -1,0 +1,6 @@
+condition,stage,finite_to_fractional_gain_percent,ci_low_percent,ci_high_percent,sequence_win_fraction,interpretation
+limb72,confirmatory,0.278541,0.167247,0.386670,0.6244,fractional_favored
+limb48,frozen_secondary,0.061340,-0.066270,0.183620,0.5340,unresolved
+mixed,frozen_secondary,-0.062150,-0.166470,0.027450,0.4800,unresolved
+temporal32,frozen_secondary,-2.717940,-3.137020,-2.304180,0.1040,finite_favored
+temporal48,frozen_secondary,-2.597160,-3.112880,-2.041480,0.1090,finite_favored

@@ -1,0 +1,26 @@
+{
+  "stage": "post_confirmatory_exploratory_gap_sweep",
+  "gaps": [
+    24,
+    36,
+    48,
+    60,
+    72,
+    84,
+    96
+  ],
+  "gain_percent": [
+    -0.013927273203417806,
+    0.007959262725651003,
+    0.01515105473332686,
+    0.1845954890619228,
+    0.24241281425728292,
+    0.2837621294573873,
+    0.27142071881227037
+  ],
+  "spearman_duration_gain": 0.9642857142857145,
+  "linear_gain_slope_percent_per_frame": 0.004865807943555039,
+  "linear_gain_intercept_percent": -0.1503235914926703,
+  "monotone_non_decreasing": false,
+  "confirmatory_result_unchanged": true
+}

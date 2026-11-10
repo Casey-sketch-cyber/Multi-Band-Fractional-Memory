@@ -1,0 +1,15 @@
+{
+  "dataset": "AIST++ released 3D COCO keypoints",
+  "frames_per_second": 60,
+  "sequences": 1408,
+  "frames": 1123873,
+  "window_frames": 128,
+  "split_unit": "dance genre plus choreography identifier",
+  "split_seed": 20260829,
+  "train_sequences": 1002,
+  "validation_sequences": 185,
+  "test_sequences": 221,
+  "test_windows": 1419,
+  "test_mask_seed": 20270829,
+  "training_seeds": [20260829, 20260830, 20260831]
+}

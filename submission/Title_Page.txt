@@ -1,0 +1,38 @@
+Endpoint-Constrained Multi-Band Fractional Memory for Repairing Long-Duration Limb Occlusions in Dance Motion Capture
+
+Article type: Article
+Target journal: Fractal and Fractional
+Target section: Optimization, Big Data, and AI/ML
+
+Authors
+
+Lei Liu1
+Zhantu Liang2*
+
+Affiliations
+
+1. Physical Education Teaching and Research Section, Xi'an Innovation College of Yan'an University, Zaohe Road 2, Weiqu Subdistrict, Chang'an District, Xi'an 710100, Shaanxi, China.
+
+2. Institute of Ultrasonic Technology, Shenzhen Polytechnic University, Shenzhen 518055, China.
+
+Corresponding author
+
+Zhantu Liang
+Institute of Ultrasonic Technology, Shenzhen Polytechnic University, Shenzhen 518055, China.
+Email: liangzhantu@szpu.edu.cn
+
+Author email addresses
+
+Lei Liu: liu290031937@gmail.com
+
+Funding
+
+This study was supported by the Scientific Research Program Funded by the Education Department of Shaanxi Provincial Government (Program No. 25JK0277).
+
+Conflict of interest
+
+The authors declare no conflict of interest.
+
+Running title
+
+Fractional Memory for Dance Motion Repair

@@ -1,0 +1,6 @@
+condition,first_method,second_method,stage,mean_gain_percent,ci_low_percent,ci_high_percent,sequence_win_fraction,paired_cohen_dz,sequences,training_seeds
+limb72,original_dancerouter,finite_bridge,confirmatory,5.292560,4.756936,5.882781,0.932127,1.096842,221,3
+limb72,original_dancerouter,fractional_bridge_complete,confirmatory,5.556360,5.019170,6.127420,0.936700,1.106000,221,3
+limb72,finite_bridge,fractional_bridge_complete,confirmatory,0.278541,0.167247,0.386670,0.624400,0.311900,221,3
+limb72,original_dancerouter,fractional_bridge_base_loss,postconfirmatory_loss_matched,5.570389,5.029856,6.143884,0.941176,1.107778,221,3
+limb72,finite_bridge,fractional_bridge_base_loss,postconfirmatory_loss_matched,0.293356,0.183975,0.400297,0.628959,0.332082,221,3

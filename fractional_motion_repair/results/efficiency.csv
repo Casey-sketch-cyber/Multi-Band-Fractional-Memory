@@ -1,0 +1,7 @@
+method,total_parameters,batch_size,median_ms_per_window,p95_ms_per_window,peak_allocated_mib,gpu
+original_dancerouter,3017766,1,4.208,4.714,,NVIDIA_RTX_3090
+finite_bridge,3020622,1,6.297,7.564,,NVIDIA_RTX_3090
+fractional_bridge,3020622,1,14.158,15.403,,NVIDIA_RTX_3090
+original_dancerouter,3017766,32,0.1302,,29.16,NVIDIA_RTX_3090
+finite_bridge,3020622,32,0.1951,,43.43,NVIDIA_RTX_3090
+fractional_bridge,3020622,32,0.4401,,43.43,NVIDIA_RTX_3090

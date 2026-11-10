@@ -1,0 +1,5 @@
+configuration,stage,validation_mpjpe,relative_change_percent
+learned_joint_specific,postconfirmatory,0.237834,0.0000
+fixed_band_centers,postconfirmatory,0.237777,-0.0239
+joint_mean_orders,postconfirmatory,0.237818,-0.0069
+joint_permuted_orders,postconfirmatory,0.237814,-0.0084

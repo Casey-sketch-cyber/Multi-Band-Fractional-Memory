@@ -1,0 +1,28 @@
+3 September 2026
+
+Dear Guest Editors and Editors of Fractal and Fractional,
+
+Please consider our manuscript, "Endpoint-Constrained Multi-Band Fractional Memory for Repairing Long-Duration Limb Occlusions in Dance Motion Capture," for publication as an Article in the Special Issue "Fractional-Order Modeling in Data-Driven Intelligent Systems: From Optimization to AI/ML Applications," within the Section "Optimization, Big Data, and AI/ML."
+
+The manuscript addresses a specific missing-data problem in markerless motion capture: reconstructing a wrist, ankle, or limb that remains occluded while the rest of a dancer is visible. We introduce a multi-band Grunwald--Letnikov fractional-integral memory bridge that operates only on observed motion increments. Its residual increments are converted into a discrete bridge whose correction is exactly zero at the two observed boundaries of a missing interval. This gives the long-gap model a power-law memory profile without allowing hidden target coordinates to enter the reconstruction.
+
+Previous human-motion studies have used fractional operators as trajectory regularizers. Our work instead uses fractional integral memory to construct inference features from visible increments during partial-body completion. The analytical endpoint constraint and a parameter-matched finite-window control make it possible to test this specific contribution.
+
+The evaluation uses all 1,408 AIST++ sequences, a choreography-grouped split, three training seeds, and a held-out test set of 221 sequences. The broad development criterion was not met. A focused 72-frame limb-occlusion hypothesis was therefore fixed before test access and then evaluated with pre-specified decision rules. The fractional system improved MPJPE over the finite bridge in all three seeds; the paired sequence-bootstrap gain was 0.279% with a 95% confidence interval of 0.167% to 0.387%. A later loss-matched control retained a 0.293% gain after removal of the fractional trajectory loss. The manuscript reports this control and the duration sweep as post-confirmatory analyses. It also reports the conditions in which the method does not help: shorter localized gaps show no resolved position advantage, and uniform full-body gaps favor finite memory.
+
+The manuscript fits Fractal and Fractional because the GL fractional integral and its power-law memory define the central inference operator. The paper provides the discrete formulation, endpoint derivation, matched control, statistical protocol, order ablation, and GPU timing measurements needed to assess the method and its practical effect.
+
+The protocol definitions, aggregate results, and source code for training, evaluation, statistical analysis, and figure generation are publicly available at https://github.com/liangdagongjue-code/StreetStyle/tree/main/fractional_motion_repair. The repository does not redistribute AIST++ data or trained checkpoints.
+
+This manuscript is original, has not been published previously, and is not under consideration elsewhere. All authors have approved the manuscript and agree with its submission. The authors declare no conflict of interest.
+
+Thank you for your consideration.
+
+Sincerely,
+
+Zhantu Liang
+Corresponding author
+Institute of Ultrasonic Technology
+Shenzhen Polytechnic University
+Shenzhen 518055, China
+Email: liangzhantu@szpu.edu.cn

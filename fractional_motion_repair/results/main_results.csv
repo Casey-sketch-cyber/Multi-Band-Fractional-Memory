@@ -1,0 +1,5 @@
+method,training_objective,stage,mpjpe_mean,mpjpe_seed_sd,velocity_error_mean,velocity_error_seed_sd,bone_relative_error_mean,bone_relative_error_seed_sd,total_parameters,strict_batch1_median_ms
+original_dancerouter,base,confirmatory,0.25921159,0.00118775,0.02946704,0.00020593,0.08029438,0.00134537,3017766,4.208
+finite_bridge,base,confirmatory,0.24576463,0.00014081,0.02917585,0.00014534,0.07755069,0.00055842,3020622,6.297
+fractional_bridge,base_plus_fractional_trajectory,confirmatory,0.24512396,0.00009200,0.02915994,0.00016900,0.07693358,0.00046600,3020622,14.158
+fractional_bridge,base,postconfirmatory_loss_matched,0.24510247,0.00009753,0.02919715,0.00017071,0.07698666,0.00046182,3020622,14.158

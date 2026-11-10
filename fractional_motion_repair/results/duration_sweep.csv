@@ -1,0 +1,8 @@
+gap_frames,gap_seconds,stage,mpjpe_gain_percent,ci_low_percent,ci_high_percent
+24,0.400,postconfirmatory_exploratory,-0.01393,-0.05840,0.03125
+36,0.600,postconfirmatory_exploratory,0.00796,-0.06561,0.08089
+48,0.800,postconfirmatory_exploratory,0.01515,-0.06866,0.09954
+60,1.000,postconfirmatory_exploratory,0.18460,0.09637,0.27566
+72,1.200,postconfirmatory_exploratory,0.24241,0.15864,0.32638
+84,1.400,postconfirmatory_exploratory,0.28376,0.20327,0.36921
+96,1.600,postconfirmatory_exploratory,0.27142,0.17985,0.36901
