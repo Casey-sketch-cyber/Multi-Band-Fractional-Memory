@@ -235,8 +235,8 @@ P1–P3 已由 [check_kernel_claims.py](check_kernel_claims.py) 数值核对通�
 | T0.0 | 给计划合并前的归档提交 `4f5724e` 打标签 `v1-fractalfract-submission` | 无 | 否 | git tag | 标签指向计划合并前的归档提交 | 完成（标签已推送） |
 | T0.1 | 按 5.1 节下载 AIST++ 标注，运行 `build_raw_cache.py` 和 `verify_raw_cache.py`；取得 `ignore_list.txt` | 无 | 否 | `data/raw60/`（不进仓库）；`PROGRESS.md` 里记录文件名、字节数、SHA-256 | 缓存为 1,408 条序列、1,123,873 帧，与 `results/split_summary.json` 一致 | 完成(PR #3) |
 | T0.1b | 在旧的固定划分上重建管线：三个种子重训基础专家（`raw_suite.py`），再训 `continued`、`fractional_loss`、`integer_memory`、`fractional_memory`、`fractional_memory_loss`，跑一次旧的测试脚本 | T0.1 | 是 | `runs/`（不进仓库）；`results/revision/pipeline_rebuild_check.csv` | 单肢 72 帧上三种方法的 MPJPE 与归档 `results/main_results.csv` 相对偏差不超过 2%；超出就先排查数据版本和预处理，不往下做。这是复现性检查，不是新的检验 | 完成(PR #3) |
-| T0.2 | 用 T0.1b 的运行结果，在验证集上比较 `continued`、`fractional_loss`、`integer_memory`、`fractional_memory` | T0.1b | 是 | `results/revision/attribution_validation.csv` | 表里有五个条件、三个种子、相对 `continued` 的增益 | 待办 |
-| T0.3 | 在验证集上逐带测量桥修正量的能量（本通道与跨通道分开），以及均匀窗盲区帧的实际占比 | T0.1b | 是 | `results/revision/band_diagnostics.csv` | 能回答 D3、D5 在真实数据上是否成立 | 待办 |
+| T0.2 | 用 T0.1b 的运行结果，在验证集上比较 `continued`、`fractional_loss`、`integer_memory`、`fractional_memory` | T0.1b | 是 | `results/revision/attribution_validation.csv` | 表里有五个条件、三个种子、相对 `continued` 的增益 | 完成(PR #6) |
+| T0.3 | 在验证集上逐带测量桥修正量的能量（本通道与跨通道分开），以及均匀窗盲区帧的实际占比 | T0.1b | 是 | `results/revision/band_diagnostics.csv` | 能回答 D3、D5 在真实数据上是否成立 | 完成(PR #6) |
 | T0.4 | 按第 6 节写协议文件并提交 | 无 | 否 | `protocols/mathematics_revision_protocol.md` | 在任何阶段 3 实验之前合并 | 待办 |
 
 ### 阶段 1：数学（不需要数据）
