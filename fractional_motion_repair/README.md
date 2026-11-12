@@ -63,6 +63,8 @@ provided.
 
 Generate the five sequence manifests with the frozen split seed from the
 [revision protocol](protocols/mathematics_revision_protocol.md).
+The published [split manifests](results/revision/splits) list the sequences
+in the primary and sensitivity folds.
 
 ```bash
 python src/revision_splits.py --raw-cache-dir data/raw60 \
@@ -76,6 +78,9 @@ experts against that manifest and the requested training seed. Use a separate
 output directory with `--include-ignored` for the all-sequence sensitivity
 split. Legacy evaluation entry points reject fold runs.
 
+`fractional_screen.py --variants K0,K1,K2,K3,K4,K5,K6,K7` selects the eight
+kernel variants in the revision protocol. The comparison uses the base loss.
+
 ## Smoke test
 
 ```bash
@@ -84,7 +89,8 @@ python src/smoke_fractional.py
 
 The smoke test checks the fractional definition, endpoint projection,
 observation preservation, hidden-target invariance, finite gradients, and
-matched parameter count.
+matched parameter count. It also checks the K0–K7 kernel family, including
+mean-lag matching and the uniform-window limit of the tempered kernel.
 
 ## Training outline
 

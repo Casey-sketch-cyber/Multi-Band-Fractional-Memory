@@ -13,7 +13,11 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader
 
-from fractional_models import MemoryTemporalConvNet, fractional_trajectory_loss
+from fractional_models import (
+    INITIAL_TEMPERING_DECAY,
+    MemoryTemporalConvNet,
+    fractional_trajectory_loss,
+)
 from pilot import (
     DurationAwareExpertRouter,
     GapAdaptiveResidualCompletion,
@@ -59,6 +63,16 @@ VARIANTS = (
     "fractional_fixed",
     "fractional_fixed_loss",
 )
+KERNEL_VARIANTS = {
+    "K0": {"mode": "instant"},
+    "K1": {"mode": "integer"},
+    "K2": {"mode": "integer", "finite_windows": (51, 65, 97)},
+    "K3": {"mode": "fractional", "learn_orders": False},
+    "K4": {"mode": "exponential"},
+    "K5": {"mode": "tempered"},
+    "K6": {"mode": "free"},
+    "K7": {"mode": "tempered", "order_ranges": ((0.35, 0.65),)},
+}
 
 
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
@@ -144,6 +158,8 @@ def build_long_expert(variant: str) -> tuple[nn.Module, float]:
             mode="fractional",
             learn_orders=False,
         )
+    elif variant in KERNEL_VARIANTS:
+        backbone = MemoryTemporalConvNet(frames=128, **KERNEL_VARIANTS[variant])
     else:
         raise ValueError(f"Unknown variant: {variant}")
     model = GapAdaptiveResidualCompletion(
@@ -158,7 +174,7 @@ def build_long_expert(variant: str) -> tuple[nn.Module, float]:
 def fractional_orders(model: nn.Module) -> list[float] | None:
     backbone = getattr(model, "backbone", None)
     memory = getattr(backbone, "memory", None)
-    if memory is None or memory.mode != "fractional":
+    if memory is None or memory.mode not in {"fractional", "tempered"}:
         return None
     values = memory.fractional_orders().detach().cpu().mean(dim=0)
     return [float(value) for value in values]
@@ -353,7 +369,7 @@ def main() -> None:
     default_variants = ",".join(VARIANTS) if args.fold is None else "continued"
     variants_arg = default_variants if args.variants is None else args.variants
     variants = tuple(item.strip() for item in variants_arg.split(",") if item.strip())
-    unknown = sorted(set(variants) - set(VARIANTS))
+    unknown = sorted(set(variants) - {*VARIANTS, *KERNEL_VARIANTS})
     if unknown:
         raise ValueError(f"Unknown variants: {unknown}")
     config = PilotConfig(
@@ -419,6 +435,10 @@ def main() -> None:
     }
     if split_manifest is not None:
         manifest.update(stage="revision_validation_only", fold=args.fold, split_manifest=SPLIT_MANIFEST)
+    kernel_variants = {name: KERNEL_VARIANTS[name] for name in variants if name in KERNEL_VARIANTS}
+    if kernel_variants:
+        manifest["kernel_variants"] = kernel_variants
+        manifest["initial_tempering_decay"] = INITIAL_TEMPERING_DECAY
     save_training_manifests(args.out_dir / "screen_manifest.json", manifest, split_manifest)
     print(json.dumps(manifest, indent=2), flush=True)
 
