@@ -15,7 +15,7 @@
 - **G0 已过（作者 2026-11-12 决定继续）**。新实验协议已冻结：[mathematics_revision_protocol.md](../fractional_motion_repair/protocols/mathematics_revision_protocol.md)。任何 T3.x 实验都必须按它执行；与修订计划第 6 节不一致的地方以协议为准。
 - T2.5 已生成并核对[两套五折清单](../fractional_motion_repair/results/revision/splits/)，清单已从服务器复制并核对 SHA-256。
   - 折内训练的数据加载改成了单进程（`num_workers=0`）。第一次计时时留意 GPU 利用率；如果明显被数据加载拖慢，再评估是否恢复多进程，所有折必须用同一设置。
-- T2.1 的 K0–K7 核变体已接入长缺口训练，使用原基础损失。
+- T2.1 的 K0–K7 核变体已接入长缺口训练，使用原基础损失（PR #10）。
 - **下一批任务（按顺序，排期 D2 晚到 D3）**，实验机通道（Codex）：
   1. T2.3：输出侧端点投影（B3）。
   2. T2.4：评估指标扩展（端点速度跳变误差、毫米单位）。
