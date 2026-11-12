@@ -1,0 +1,4 @@
+condition,method,training_objective,mpjpe_seed_20260829,mpjpe_seed_20260830,mpjpe_seed_20260831,rebuilt_mpjpe_mean,archived_mpjpe_mean,absolute_relative_deviation_percent,tolerance_percent,status
+limb72,original_dancerouter,base,0.25708051614682587,0.2580457416085332,0.25820195099680227,0.25777607,0.25921159,0.5538,2,pass
+limb72,finite_bridge,base,0.2425845164384974,0.24270651092610693,0.24258904315591026,0.24262669,0.24576463,1.2768,2,pass
+limb72,fractional_bridge,base_plus_fractional_trajectory,0.24188455430750727,0.2419095953721466,0.24211321755548476,0.24196912,0.24512396,1.2870,2,pass

@@ -4,14 +4,13 @@
 
 仓库已整理 2026-09-03 投稿版和相应的代码、实验协议及汇总结果。原投稿包的提交检查和引用核对见 `submission/`。
 
-该稿被 *Fractal and Fractional* 拒稿（意见为创新点不足），现改投 *Mathematics*。修订按 [docs/revision/MATHEMATICS_REVISION_PLAN.md](revision/MATHEMATICS_REVISION_PLAN.md) 执行，目前处于阶段 0，尚未开始任何新实验。原实验服务器上的数据、缓存和检查点都已不在，所有实验要从下载数据开始重建。新稿常规投稿（非特刊），全文重写。
+该稿被 *Fractal and Fractional* 拒稿（意见为创新点不足），现改投 *Mathematics*，常规投稿（非特刊），全文重写。修订按 [修订计划](revision/MATHEMATICS_REVISION_PLAN.md) 执行，目前处于阶段 0。AIST++ 缓存已重建，旧固定划分上的 T0.1b 三种子复现通过 MPJPE 容差检查。验收结果见 [pipeline_rebuild_check.csv](../fractional_motion_repair/results/revision/pipeline_rebuild_check.csv)。
 
 ## 待办
 
-- 按修订计划第 7 节任务表领取任务。关键路径是 T0.1（下载 AIST++ 标注并建缓存）→ T0.1b（在旧划分上重建管线，与归档汇总值对照）→ T0.2、T0.3 → 决策门 G0。
+- T0.1b 验收表待审查。阶段 0 后续任务为 T0.2（验证集归因比较）和 T0.3（逐带桥修正量诊断），两项完成后进入决策门 G0。
 - 不需要数据和 GPU、可立即并行的任务：T0.4、T1.1、T2.1、T2.4、T2.5、T2.9、T5.1。
 - 作者对 U1–U6 的答复已写入修订计划第 11 节；修订计划和 `DECISIONS.md` 里的决策已由作者确认并合并（PR #1）。下一个需要作者拍板的地方是 G0。
-- 从头复现时，按协议取得 AIST++ 关键点，构建缓存并重跑三随机种子实验。
 
 ## 已知条件
 
@@ -23,6 +22,12 @@
 - "DanceRouter"没有发表过，新稿不用这个名称，也不引用。
 
 ## 工作记录
+
+### 2026-11-11 · Codex · 汇总 T0.1b 复现验收结果
+
+- 核对服务器的 `T0.1b_DONE` 和 `runs/confirmatory_test/fractional_test_results.csv`。测试覆盖 3 个训练种子、3 种方法和 5 种掩码条件，共 45 组汇总记录。`limb72` 测试包含 221 条序列、1,419 个窗口。
+- 对每种方法的 `limb72` MPJPE 取三种子均值，并与 `results/main_results.csv` 的 `confirmatory` 记录计算绝对相对偏差。原始路由器、有限窗桥和分数阶桥的偏差依次为 0.5538%、1.2768%、1.2870%，均在计划规定的 2% 容差内。
+- 重建缓存包含 1,408 条序列、1,123,873 帧，与归档计数一致。归档未提供 `data/sequence_cache_128.npz`，`verify_raw_cache.py` 所需的旧缓存对照尚未执行。
 
 ### 2026-11-10 · claude · claude/mathematics-revision-plan（第二次提交）
 
