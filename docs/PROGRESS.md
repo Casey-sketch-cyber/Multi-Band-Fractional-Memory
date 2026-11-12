@@ -14,6 +14,8 @@
 
 - **G0 已过（作者 2026-11-12 决定继续）**。新实验协议已冻结：[mathematics_revision_protocol.md](../fractional_motion_repair/protocols/mathematics_revision_protocol.md)。任何 T3.x 实验都必须按它执行；与修订计划第 6 节不一致的地方以协议为准。
 - T2.5 已在真实 AIST++ 缓存上生成并核对主分析和敏感性分析的五折清单（PR #9），详见工作记录。
+  - 顺带任务（随下一个 PR 提交即可）：把 `runs/revision/splits/` 和 `runs/revision/splits_all/` 的五折序列名单复制到 `fractional_motion_repair/results/revision/splits/`。名单只有序列名，不含动作数据，进仓库后论文的划分才能被别人复现。
+  - 折内训练的数据加载改成了单进程（`num_workers=0`）。第一次计时时留意 GPU 利用率；如果明显被数据加载拖慢，再评估是否恢复多进程，所有折必须用同一设置。
 - **下一批任务（按顺序，排期 D2 晚到 D3）**，实验机通道（Codex）：
   1. T2.1：核族重构，至少先做 K0、K1、K2、K3、K4、K5、K7；K6 可放到 D3。
   2. T2.3：输出侧端点投影（B3）。
@@ -38,6 +40,11 @@
 - "DanceRouter"没有发表过，新稿不用这个名称，也不引用。
 
 ## 工作记录
+
+### 2026-11-12 · claude · codex/t2-5-grouped-folds（审查与合并）
+
+- **完成**：审查 PR #9。划分规则与协议第 2 节逐条一致（外层种子字符串、按序轮流分折、内层验证种子字符串和 15% 规则）。用合成的 AIST++ 风格名单独立检验：不传忽略名单时与旧实现逐项一致；五折测试集互斥且覆盖全部非忽略序列；训练、验证、测试之间没有编舞组泄漏；忽略序列不出现在任何一侧；结果可重复。折内模式下 `raw_suite.py` 训练完直接返回、不构造测试集，旧评估入口拒绝新折目录。
+
 
 ### 2026-11-12 · Codex · codex/t2-5-grouped-folds
 
