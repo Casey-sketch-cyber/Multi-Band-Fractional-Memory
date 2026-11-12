@@ -13,7 +13,7 @@
 ## 待办
 
 - **G0 已过（作者 2026-11-12 决定继续）**。新实验协议已冻结：[mathematics_revision_protocol.md](../fractional_motion_repair/protocols/mathematics_revision_protocol.md)。任何 T3.x 实验都必须按它执行；与修订计划第 6 节不一致的地方以协议为准。
-- T2.5 已在真实 AIST++ 缓存上生成并核对主分析和敏感性分析的五折清单，详见工作记录。
+- T2.5 已在真实 AIST++ 缓存上生成并核对主分析和敏感性分析的五折清单（PR #9），详见工作记录。
 - **下一批任务（按顺序，排期 D2 晚到 D3）**，实验机通道（Codex）：
   1. T2.1：核族重构，至少先做 K0、K1、K2、K3、K4、K5、K7；K6 可放到 D3。
   2. T2.3：输出侧端点投影（B3）。
