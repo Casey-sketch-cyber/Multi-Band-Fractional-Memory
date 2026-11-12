@@ -17,6 +17,7 @@ from fractional_screen import (
 )
 from pilot import DurationAwareExpertRouter, PilotConfig, grouped_split, parameter_count
 from raw_suite import RawWindowDataset, evaluate_detailed
+from revision_splits import require_legacy_runs
 
 
 CONDITIONS = ("limb72", "limb48", "mixed", "temporal32", "temporal48")
@@ -64,6 +65,7 @@ def main() -> None:
     args = parser.parse_args()
     seeds = [int(value) for value in args.seeds.split(",")]
     finite_runs = args.finite_runs or args.fractional_runs
+    require_legacy_runs([*args.base_runs, *finite_runs, *args.fractional_runs])
     if (
         len(seeds) != len(args.base_runs)
         or len(seeds) != len(finite_runs)

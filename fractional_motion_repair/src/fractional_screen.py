@@ -21,12 +21,18 @@ from pilot import (
     TemporalConvNet,
     completion_loss,
     evaluate_method,
-    grouped_split,
     make_mask,
     parameter_count,
     seed_everything,
 )
-from raw_suite import RawWindowDataset
+from raw_suite import make_train_val_loaders
+from revision_splits import (
+    SPLIT_MANIFEST,
+    add_fold_arguments,
+    require_legacy_runs,
+    save_training_manifests,
+    training_split,
+)
 
 
 SCREEN_CONDITIONS = (
@@ -89,45 +95,6 @@ def make_long_gap_train_mask(
             )[0]
         )
     return torch.stack(masks)
-
-
-def make_train_val_loaders(
-    cache_dir: Path,
-    splits: dict[str, np.ndarray],
-    config: PilotConfig,
-    train_windows: int,
-    val_windows: int,
-    quick: bool,
-) -> tuple[DataLoader, DataLoader]:
-    train_dataset = RawWindowDataset(
-        cache_dir,
-        splits["train"],
-        config.frames,
-        mode="random",
-        seed=config.seed + 101,
-        windows_per_sequence=train_windows,
-    )
-    val_dataset = RawWindowDataset(
-        cache_dir,
-        splits["val"],
-        config.frames,
-        mode="fixed",
-        seed=config.seed,
-        max_windows=2 if quick else val_windows,
-    )
-    common = {
-        "batch_size": config.batch_size,
-        "num_workers": 2,
-        "pin_memory": torch.cuda.is_available(),
-    }
-    train_loader = DataLoader(
-        train_dataset,
-        shuffle=True,
-        generator=torch.Generator().manual_seed(config.seed + 31),
-        **common,
-    )
-    val_loader = DataLoader(val_dataset, shuffle=False, **common)
-    return train_loader, val_loader
 
 
 def load_checkpoint(module: nn.Module, path: Path) -> dict[str, list[str]]:
@@ -370,33 +337,51 @@ def main() -> None:
     )
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--base-run", type=Path, required=True)
-    parser.add_argument("--seed", type=int, default=20260829)
-    parser.add_argument("--split-seed", type=int, default=20260829)
+    parser.add_argument("--seed", type=int)
+    parser.add_argument("--split-seed", type=int)
+    add_fold_arguments(parser)
     parser.add_argument("--epochs", type=int, default=8)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--train-windows", type=int, default=2)
     parser.add_argument("--val-windows", type=int, default=3)
     parser.add_argument("--memory-lr-multiplier", type=float, default=10.0)
-    parser.add_argument("--variants", default=",".join(VARIANTS))
+    parser.add_argument("--variants")
     parser.add_argument("--quick", action="store_true")
     args = parser.parse_args()
 
-    variants = tuple(item.strip() for item in args.variants.split(",") if item.strip())
+    default_seed = 20260829 if args.fold is None else 20261201
+    default_variants = ",".join(VARIANTS) if args.fold is None else "continued"
+    variants_arg = default_variants if args.variants is None else args.variants
+    variants = tuple(item.strip() for item in variants_arg.split(",") if item.strip())
     unknown = sorted(set(variants) - set(VARIANTS))
     if unknown:
         raise ValueError(f"Unknown variants: {unknown}")
     config = PilotConfig(
-        seed=args.seed,
+        seed=default_seed if args.seed is None else args.seed,
         epochs=min(args.epochs, 3) if args.quick else args.epochs,
         batch_size=min(args.batch_size, 8) if args.quick else args.batch_size,
         learning_rate=1e-4,
     )
     seed_everything(config.seed)
-    args.out_dir.mkdir(parents=True, exist_ok=True)
-
     with np.load(args.raw_cache_dir / "metadata.npz") as metadata:
         names = np.asarray(metadata["names"]).astype(str)
-    splits = grouped_split(names, args.split_seed)
+    splits, split_seed, split_manifest = training_split(names, args, legacy_seed=20260829)
+    if split_manifest is None:
+        require_legacy_runs([args.base_run])
+    else:
+        base_split_path = args.base_run / SPLIT_MANIFEST
+        if (
+            not base_split_path.is_file()
+            or json.loads(base_split_path.read_text(encoding="utf-8")) != split_manifest
+        ):
+            raise ValueError("Base experts must use the same fold and sequence lists")
+        base_manifest_path = args.base_run / "raw_suite_manifest.json"
+        base_manifest = json.loads(base_manifest_path.read_text(encoding="utf-8"))
+        if (
+            base_manifest["config"]["seed"] != config.seed
+            or base_manifest.get("test_set_accessed") is not False
+        ):
+            raise ValueError("Base experts must use the same seed with the test set held out")
     if args.quick:
         splits = {
             "train": splits["train"][:128],
@@ -407,7 +392,7 @@ def main() -> None:
         "stage": "development_validation_only",
         "test_set_accessed": False,
         "config": asdict(config),
-        "split_seed": args.split_seed,
+        "split_seed": split_seed,
         "split_counts": {key: int(len(value)) for key, value in splits.items()},
         "screen_conditions": SCREEN_CONDITIONS,
         "primary_conditions": PRIMARY_CONDITIONS,
@@ -432,9 +417,9 @@ def main() -> None:
             "finite_window_control": [9, 33, 97],
         },
     }
-    (args.out_dir / "screen_manifest.json").write_text(
-        json.dumps(manifest, indent=2), encoding="utf-8"
-    )
+    if split_manifest is not None:
+        manifest.update(stage="revision_validation_only", fold=args.fold, split_manifest=SPLIT_MANIFEST)
+    save_training_manifests(args.out_dir / "screen_manifest.json", manifest, split_manifest)
     print(json.dumps(manifest, indent=2), flush=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -445,6 +430,7 @@ def main() -> None:
     load_checkpoint(original_long, args.base_run / "gap_router_best.pt")
     original_long.to(device).eval()
     baseline_router = DurationAwareExpertRouter(short_expert, original_long)
+    num_workers = 0 if split_manifest is not None else 2
     _, baseline_val_loader = make_train_val_loaders(
         args.raw_cache_dir,
         splits,
@@ -452,6 +438,7 @@ def main() -> None:
         args.train_windows,
         args.val_windows,
         args.quick,
+        num_workers=num_workers,
     )
     baseline_metrics, _ = evaluate_router(
         baseline_router,
@@ -474,6 +461,7 @@ def main() -> None:
             args.train_windows,
             args.val_windows,
             args.quick,
+            num_workers=num_workers,
         )
         long_expert, fractional_weight = build_long_expert(variant)
         initialization[variant] = load_checkpoint(
@@ -511,6 +499,7 @@ def main() -> None:
             args.train_windows,
             args.val_windows,
             args.quick,
+            num_workers=num_workers,
         )
         router = DurationAwareExpertRouter(short_expert, long_expert)
         metrics, score = evaluate_router(
