@@ -6,7 +6,9 @@
 
 该稿被 *Fractal and Fractional* 拒稿（意见为创新点不足），现改投 *Mathematics*，常规投稿（非特刊），全文重写。修订按 [修订计划](revision/MATHEMATICS_REVISION_PLAN.md) 执行，目前处于阶段 0。AIST++ 缓存已重建，旧固定划分上的 T0.1b 三种子复现通过 MPJPE 容差检查。验收结果见 [pipeline_rebuild_check.csv](../fractional_motion_repair/results/revision/pipeline_rebuild_check.csv)。
 
-**期限：2026-11-17 前投稿。** [一周排期](revision/ONE_WEEK_SCHEDULE.md)按 RTX 4070 Super（12 GB 显存、32 GB 内存）估算。T0.1b 实测环境见工作记录。
+**期限：2026-11-17 前投稿。** 实验机为 NVIDIA RTX A6000（作者 2026-11-12 确认）；[一周排期](revision/ONE_WEEK_SCHEDULE.md)原按 RTX 4070 Super 估算，A6000 只会更宽裕。
+
+**合并规则**：执行智能体开 PR，Claude 审查通过后直接合并，作者不需要操作。详见 `AGENTS.md` 第 7 条。
 
 ## 待办
 
@@ -28,6 +30,12 @@
 - "DanceRouter"没有发表过，新稿不用这个名称，也不引用。
 
 ## 工作记录
+
+### 2026-11-12 · claude · claude/merge-rule-and-gpu
+
+- **完成**：按作者要求在 `AGENTS.md` 加第 7 条合并规则：执行智能体开 PR 不自行合并，Claude 审查通过后直接合并。把实验机更新为 RTX A6000（排期、本文件）。合并了 PR #4。
+- **注意 / 坑**：这条规则只在本仓库生效，没有改 `ai-workflow` 共享规则里的"不要自己合并"。
+
 
 ### 2026-11-12 · claude · codex/t0-1b-review-follow-up（审查与合并）
 
