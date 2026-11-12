@@ -29,6 +29,15 @@
 
 ## 工作记录
 
+### 2026-11-12 · claude · codex/t0-1b-review-follow-up（审查与合并）
+
+- **完成**：审查 PR #4。用已提交的 45 行汇总表独立重算了验收表的三种误差，全部一致；汇总表 SHA-256 与记录一致；五种掩码对照的口径与 `aggregate_raw.py` 的 `paired_bootstrap`（序列均值之差除以基线序列均值）一致；T0.0 标签指向 `4f5724e`。
+- **更正**：`keypoints3d.zip` 的 SHA-256 原记录少了一位（63 个字符）。已从 GitHub 发布页重新下载并流式计算，字节数 876,142,511 与记录相同，正确值已写入下表。
+- **注意 / 坑**：
+  - T0.1b 实际在 RTX A6000 上训练和评估，不是排期估算所用的 4070 Super。以后的效率表（T3.8）必须注明 GPU，且不能和归档的 RTX 3090 计时直接比较。
+  - 五种掩码对照依赖服务器上的逐序列结果，仓库里只能复算点加权的验收表，不能复算对照表。
+  - 速度误差和骨长误差与归档的偏差都在 0.5% 以内，只有两个桥模型的 MPJPE 偏差约 1.28%。
+
 ### 2026-11-11 · Codex · codex/t0-1b-review-follow-up
 
 - 补齐 PR #3 的验收记录。[验收表](../fractional_motion_repair/results/revision/pipeline_rebuild_check.csv)增加速度误差和相对骨长误差，2% 判定沿用 MPJPE。核对了[服务器 45 行汇总](../fractional_motion_repair/results/revision/fractional_test_results.csv)的 SHA-256，按旧协议计算了五种掩码的逐序列增益对照。
@@ -36,7 +45,7 @@
 
   | 文件 | 字节数 | SHA-256 |
   |---|---:|---|
-  | `keypoints3d.zip` | 876142511 | `8b2a3bfcea233b8d1859a0dc93c780a8f9e832136ef6828d0b3ddff640ddcfd` |
+  | `keypoints3d.zip` | 876142511 | `8b2a3bfcea233b8d1859a0dc93c7800a8f9e832136ef6828d0b3ddff640ddcfd` |
   | `keypoints2d.zip` | 1316187461 | `e108a10718b805f8a909bdb590778934483e7208251ec2aae58693803b0a98d8` |
   | `ignore_list.txt` | 1217 | `be44c54baa91a1aff18306da2f3fc44abd1adfbb32317ac9f9b1362685415339` |
 
