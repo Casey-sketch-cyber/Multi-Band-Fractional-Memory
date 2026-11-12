@@ -2,6 +2,7 @@
 
 - 版本：v1.1，2026-11-10，起草者 Claude（分支 `claude/mathematics-revision-plan`）。v1.1 写入作者对第 11 节的答复：常规投稿、原运行数据已丢失需从头重建、第二数据集用 LAFAN1
 - 适用对象：接手本仓库的任何智能体（Codex、Cursor、Claude、Grok 等）和作者
+- **本周范围和日期以 [ONE_WEEK_SCHEDULE.md](ONE_WEEK_SCHEDULE.md) 为准**（2026-11-17 前投稿）。本文件保留完整的任务定义、验收标准和决策门
 - 前置阅读：[AGENTS.md](../../AGENTS.md) → [PROGRESS.md](../PROGRESS.md) → [ARCHITECTURE.md](../ARCHITECTURE.md) → [DECISIONS.md](../DECISIONS.md)
 
 ## 0. 怎么用这份计划
