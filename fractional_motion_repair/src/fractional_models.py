@@ -9,6 +9,11 @@ from torch.nn import functional as F
 from pilot import linear_interpolate
 
 
+DEFAULT_ORDER_RANGES = ((0.10, 0.35), (0.35, 0.65), (0.65, 0.90))
+DEFAULT_FINITE_WINDOWS = (9, 33, 97)
+INITIAL_TEMPERING_DECAY = 0.01
+
+
 def gl_difference_coefficients(
     alpha: torch.Tensor,
     kernel_size: int,
@@ -47,11 +52,7 @@ def symmetric_gl_difference(
     return 0.5 * (left + right)
 
 
-def gl_integral_coefficients(
-    beta: torch.Tensor,
-    kernel_size: int,
-) -> torch.Tensor:
-    """Return normalized GL fractional-integral coefficients."""
+def _gl_integral_weights(beta: torch.Tensor, kernel_size: int) -> torch.Tensor:
     if kernel_size < 2:
         raise ValueError("kernel_size must be at least 2")
     coefficients = [torch.ones_like(beta)]
@@ -60,9 +61,50 @@ def gl_integral_coefficients(
         coefficients.append(
             previous * (beta + float(index - 1)) / float(index)
         )
-    stacked = torch.stack(coefficients)
+    return torch.stack(coefficients)
+
+
+def gl_integral_coefficients(
+    beta: torch.Tensor,
+    kernel_size: int,
+) -> torch.Tensor:
+    """Return normalized GL fractional-integral coefficients."""
+    stacked = _gl_integral_weights(beta, kernel_size)
     denominator = stacked.sum(dim=0, keepdim=True)
     return stacked / denominator.clamp_min(torch.finfo(stacked.dtype).eps)
+
+
+def _exponential_weights(decay: torch.Tensor, kernel_size: int) -> torch.Tensor:
+    lags = torch.arange(kernel_size, dtype=decay.dtype, device=decay.device)
+    lags = lags.reshape((kernel_size,) + (1,) * decay.ndim)
+    return torch.exp(-lags * decay)
+
+
+def tempered_gl_coefficients(
+    beta: torch.Tensor,
+    decay: torch.Tensor,
+    kernel_size: int,
+) -> torch.Tensor:
+    """Return normalized GL weights times exp(-decay * lag), with taps first."""
+    beta, decay = torch.broadcast_tensors(beta, decay)
+    weights = _gl_integral_weights(beta, kernel_size) * _exponential_weights(decay, kernel_size)
+    return weights / weights.sum(dim=0, keepdim=True)
+
+
+def _matched_exponential_decay(orders: torch.Tensor, kernel_size: int) -> torch.Tensor:
+    """Match the truncated GL mean lag independently for each band."""
+    lags = torch.arange(kernel_size, dtype=orders.dtype, device=orders.device)[:, None]
+    target = (gl_integral_coefficients(orders, kernel_size) * lags).sum(dim=0)
+    low = torch.zeros_like(target)
+    high = torch.full_like(target, -math.log(torch.finfo(orders.dtype).tiny))
+    for _ in range(64):
+        midpoint = (low + high) / 2
+        weights = _exponential_weights(midpoint, kernel_size)
+        mean_lag = (weights * lags).sum(dim=0) / weights.sum(dim=0)
+        needs_more_decay = mean_lag > target
+        low = torch.where(needs_more_decay, midpoint, low)
+        high = torch.where(needs_more_decay, high, midpoint)
+    return (low + high) / 2
 
 
 def symmetric_gl_integral_context(
@@ -176,7 +218,7 @@ def endpoint_constrained_bridge(
 
 
 class TemporalMemoryAdapter(nn.Module):
-    """A parameter-matched fractional or integer long-memory adapter."""
+    """Endpoint-constrained input bridge with selectable temporal kernels."""
 
     def __init__(
         self,
@@ -184,22 +226,14 @@ class TemporalMemoryAdapter(nn.Module):
         mode: str,
         learn_orders: bool = True,
         kernel_size: int = 97,
-        order_ranges: tuple[tuple[float, float], ...] = (
-            (0.10, 0.35),
-            (0.35, 0.65),
-            (0.65, 0.90),
-        ),
-        finite_windows: tuple[int, ...] = (9, 33, 97),
+        order_ranges: tuple[tuple[float, float], ...] = DEFAULT_ORDER_RANGES,
+        finite_windows: tuple[int, ...] = DEFAULT_FINITE_WINDOWS,
     ) -> None:
         super().__init__()
-        if mode not in {"fractional", "integer"}:
+        if mode not in {"fractional", "integer", "instant", "exponential", "tempered", "free"}:
             raise ValueError(f"Unknown memory mode: {mode}")
         if kernel_size % 2 == 0:
             raise ValueError("kernel_size must be odd")
-        if len(order_ranges) != len(finite_windows):
-            raise ValueError("fractional bands and finite windows must match")
-        if max(finite_windows) > kernel_size:
-            raise ValueError("finite windows must fit inside kernel_size")
 
         self.channels = channels
         if channels % 3 != 0:
@@ -209,29 +243,80 @@ class TemporalMemoryAdapter(nn.Module):
         self.mode = mode
         self.kernel_size = kernel_size
         self.finite_windows = finite_windows
-        lower = torch.tensor([item[0] for item in order_ranges])
-        upper = torch.tensor([item[1] for item in order_ranges])
-        self.register_buffer("order_lower", lower)
-        self.register_buffer("order_upper", upper)
-        self.raw_orders = nn.Parameter(
-            torch.zeros(self.order_groups, len(order_ranges)),
-            requires_grad=learn_orders,
-        )
-        self.mix_logits = nn.Parameter(torch.zeros(channels, len(order_ranges)))
+        legacy_mode = mode in {"fractional", "integer"}
+        bands = 1 if mode == "instant" else len(order_ranges)
+        if legacy_mode:
+            if len(order_ranges) != len(finite_windows):
+                raise ValueError("fractional bands and finite windows must match")
+            if max(finite_windows) > kernel_size:
+                raise ValueError("finite windows must fit inside kernel_size")
+            lower = torch.tensor([item[0] for item in order_ranges])
+            upper = torch.tensor([item[1] for item in order_ranges])
+            self.register_buffer("order_lower", lower)
+            self.register_buffer("order_upper", upper)
+            self.raw_orders = nn.Parameter(
+                torch.zeros(self.order_groups, bands), requires_grad=learn_orders
+            )
+        elif mode != "instant":
+            if bands == 0 or kernel_size < 3:
+                raise ValueError("Long-memory kernels require at least one band and three taps")
+            dtype = torch.float64 if mode == "exponential" else torch.get_default_dtype()
+            initial = torch.tensor([(lower + upper) / 2 for lower, upper in order_ranges], dtype=dtype)
+            if not ((initial > 0) & (initial <= 1)).all():
+                raise ValueError("Initial GL orders must be in (0, 1]")
+            if mode == "free":
+                # Distinct GL initializations let the three bands learn independently.
+                coefficients = gl_integral_coefficients(initial, kernel_size).transpose(0, 1)
+                self.kernel_logits = nn.Parameter(coefficients.clamp_min(torch.finfo(dtype).tiny).log())
+            elif mode == "exponential":
+                self.register_buffer(
+                    "exponential_decay", _matched_exponential_decay(initial, kernel_size)
+                )
+            else:
+                self.raw_beta = nn.Parameter((-initial.log()).sqrt(), requires_grad=learn_orders)
+                self.raw_decay = nn.Parameter(
+                    torch.full_like(initial, math.sqrt(INITIAL_TEMPERING_DECAY)),
+                    requires_grad=learn_orders,
+                )
+        if legacy_mode or bands > 1:
+            self.mix_logits = nn.Parameter(torch.zeros(channels, bands))
+        else:
+            self.register_parameter("mix_logits", None)
         self.gate_logits = nn.Parameter(torch.full((channels,), -2.0))
         self.projection = nn.Conv1d(channels, channels, kernel_size=1, bias=False)
         nn.init.zeros_(self.projection.weight)
 
     def fractional_orders(self) -> torch.Tensor:
+        if self.mode == "tempered":
+            beta = torch.exp(-self.raw_beta.square()).clamp_min(torch.finfo(self.raw_beta.dtype).tiny)
+            return beta.unsqueeze(0)
+        if self.mode not in {"fractional", "integer"}:
+            raise ValueError(f"{self.mode} does not have GL orders")
         return self.order_lower[None, :] + (
             self.order_upper - self.order_lower
         )[None, :] * torch.sigmoid(self.raw_orders)
+
+    def shared_kernel_coefficients(self) -> torch.Tensor:
+        """Return normalized long-memory taps in band-by-lag order."""
+        if self.mode == "exponential":
+            weights = _exponential_weights(self.exponential_decay, self.kernel_size)
+            return (weights / weights.sum(dim=0, keepdim=True)).transpose(0, 1)
+        if self.mode == "tempered":
+            return tempered_gl_coefficients(
+                self.fractional_orders().squeeze(0), self.raw_decay.square(), self.kernel_size
+            ).transpose(0, 1)
+        if self.mode == "free":
+            return self.kernel_logits.softmax(dim=-1)
+        raise ValueError(f"{self.mode} does not use shared long-memory coefficients")
 
     def _band_features(
         self,
         signal: torch.Tensor,
         visibility: torch.Tensor,
     ) -> torch.Tensor:
+        if self.mode == "instant":
+            # Only other visible joints can contribute inside a joint's gap.
+            return (signal * visibility).unsqueeze(2)
         if self.mode == "fractional":
             channel_orders = self.fractional_orders().repeat_interleave(
                 self.coordinates_per_group,
@@ -248,7 +333,7 @@ class TemporalMemoryAdapter(nn.Module):
                 ) - signal
                 for band_index in range(channel_orders.shape[1])
             ]
-        else:
+        elif self.mode == "integer":
             bands = [
                 masked_bidirectional_context(
                     signal,
@@ -256,6 +341,11 @@ class TemporalMemoryAdapter(nn.Module):
                     signal.new_full((window_size,), 1.0 / window_size),
                 ) - signal
                 for window_size in self.finite_windows
+            ]
+        else:
+            bands = [
+                masked_bidirectional_context(signal, visibility, coefficients) - signal
+                for coefficients in self.shared_kernel_coefficients().to(dtype=signal.dtype)
             ]
         return torch.stack(bands, dim=2)
 
@@ -271,8 +361,11 @@ class TemporalMemoryAdapter(nn.Module):
             visibility[..., 1:] * visibility[..., :-1]
         )
         bands = self._band_features(increments, increment_visibility)
-        mixing = torch.softmax(self.mix_logits, dim=-1)
-        memory = torch.einsum("bcot,co->bct", bands, mixing)
+        if self.mix_logits is None:
+            memory = bands.squeeze(2)
+        else:
+            mixing = torch.softmax(self.mix_logits, dim=-1)
+            memory = torch.einsum("bcot,co->bct", bands, mixing)
         gate = torch.sigmoid(self.gate_logits).view(1, -1, 1)
         residual_increments = gate * self.projection(memory)
         correction = endpoint_constrained_bridge(
@@ -283,7 +376,7 @@ class TemporalMemoryAdapter(nn.Module):
 
 
 class MemoryTemporalConvNet(nn.Module):
-    """TCN completion backbone with a power-law or integer memory bank."""
+    """TCN completion backbone with an input-side memory bridge."""
 
     def __init__(
         self,
@@ -294,6 +387,9 @@ class MemoryTemporalConvNet(nn.Module):
         width: int = 248,
         dilations: tuple[int, ...] = (1, 2, 4, 8, 16, 32),
         kernel_size: int = 97,
+        *,
+        order_ranges: tuple[tuple[float, float], ...] = DEFAULT_ORDER_RANGES,
+        finite_windows: tuple[int, ...] = DEFAULT_FINITE_WINDOWS,
     ) -> None:
         super().__init__()
         channels = joints * 4
@@ -305,6 +401,8 @@ class MemoryTemporalConvNet(nn.Module):
             mode=mode,
             learn_orders=learn_orders,
             kernel_size=kernel_size,
+            order_ranges=order_ranges,
+            finite_windows=finite_windows,
         )
         blocks: list[nn.Module] = []
         for dilation in dilations:
@@ -368,8 +466,7 @@ def memory_parameter_count(channels: int = 51) -> int:
 
 
 def initial_order_values() -> tuple[float, ...]:
-    ranges = ((0.10, 0.35), (0.35, 0.65), (0.65, 0.90))
-    return tuple((lower + upper) / 2.0 for lower, upper in ranges)
+    return tuple((lower + upper) / 2.0 for lower, upper in DEFAULT_ORDER_RANGES)
 
 
 def validate_fractional_definition() -> None:
