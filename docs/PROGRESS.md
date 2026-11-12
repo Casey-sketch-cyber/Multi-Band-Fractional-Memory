@@ -4,7 +4,7 @@
 
 仓库已整理 2026-09-03 投稿版和相应的代码、实验协议及汇总结果。原投稿包的提交检查和引用核对见 `submission/`。
 
-该稿被 *Fractal and Fractional* 拒稿（意见为创新点不足），现改投 *Mathematics*，常规投稿（非特刊），全文重写。AIST++ 缓存已重建，旧固定划分上的 [T0.1b 复现](../fractional_motion_repair/results/revision/pipeline_rebuild_check.csv)通过 MPJPE 容差检查。已按[修订计划](revision/MATHEMATICS_REVISION_PLAN.md)在同一验证集完成 [T0.2](../fractional_motion_repair/results/revision/attribution_validation.csv) 和 [T0.3](../fractional_motion_repair/results/revision/band_diagnostics.csv)，G0 待作者决定。
+该稿被 *Fractal and Fractional* 拒稿（意见为创新点不足），现改投 *Mathematics*，常规投稿（非特刊），全文重写。AIST++ 缓存已重建，旧固定划分上的 [T0.1b 复现](../fractional_motion_repair/results/revision/pipeline_rebuild_check.csv)通过 MPJPE 容差检查。同一验证集的 [T0.2](../fractional_motion_repair/results/revision/attribution_validation.csv) 和 [T0.3](../fractional_motion_repair/results/revision/band_diagnostics.csv) 已合并，作者确认通过 G0，按新协议进入阶段 2。
 
 **期限：2026-11-17 前投稿。** 实验机为 NVIDIA RTX A6000（作者 2026-11-12 确认）；[一周排期](revision/ONE_WEEK_SCHEDULE.md)原按 RTX 4070 Super 估算，A6000 只会更宽裕。
 
@@ -13,12 +13,14 @@
 ## 待办
 
 - **G0 已过（作者 2026-11-12 决定继续）**。新实验协议已冻结：[mathematics_revision_protocol.md](../fractional_motion_repair/protocols/mathematics_revision_protocol.md)。任何 T3.x 实验都必须按它执行；与修订计划第 6 节不一致的地方以协议为准。
+- T2.5 已在真实 AIST++ 缓存上生成并核对主分析和敏感性分析的五折清单（PR #9），详见工作记录。
+  - 顺带任务（随下一个 PR 提交即可）：把 `runs/revision/splits/` 和 `runs/revision/splits_all/` 的五折序列名单复制到 `fractional_motion_repair/results/revision/splits/`。名单只有序列名，不含动作数据，进仓库后论文的划分才能被别人复现。
+  - 折内训练的数据加载改成了单进程（`num_workers=0`）。第一次计时时留意 GPU 利用率；如果明显被数据加载拖慢，再评估是否恢复多进程，所有折必须用同一设置。
 - **下一批任务（按顺序，排期 D2 晚到 D3）**，实验机通道（Codex）：
-  1. T2.5：5 折分组划分（协议第 2 节，含剔除 `ignore_list.txt`）。
-  2. T2.1：核族重构，至少先做 K0、K1、K2、K3、K4、K5、K7；K6 可放到 D3。
-  3. T2.3：输出侧端点投影（B3）。
-  4. T2.4：评估指标扩展（端点速度跳变误差、毫米单位）。
-  5. 以上合并后开跑 T3.1（B0、B2、B3，K5）和 T3.2（K0–K7），先跑第 0 折一个种子计时，按协议第 3 节定种子数并写进本文件。
+  1. T2.1：核族重构，至少先做 K0、K1、K2、K3、K4、K5、K7；K6 可放到 D3。
+  2. T2.3：输出侧端点投影（B3）。
+  3. T2.4：评估指标扩展（端点速度跳变误差、毫米单位）。
+  4. 以上合并后开跑 T3.1（B0、B2、B3，K5）和 T3.2（K0–K7），先跑第 0 折一个种子计时，按协议第 3 节定种子数并写进本文件。
 - 并行通道（Cursor 或其他智能体，不需要 GPU）：T1.1（命题证明）、T1.2（核族示意图）、T5.1（`submission_mathematics/` 骨架）、T2.8 的基线接入代码。
 - 下一个需要作者拍板的地方是 G1（协议第 8 节，预计排期 D3 晚到 D4）。
 
@@ -38,6 +40,18 @@
 - "DanceRouter"没有发表过，新稿不用这个名称，也不引用。
 
 ## 工作记录
+
+### 2026-11-12 · claude · codex/t2-5-grouped-folds（审查与合并）
+
+- **完成**：审查 PR #9。划分规则与协议第 2 节逐条一致（外层种子字符串、按序轮流分折、内层验证种子字符串和 15% 规则）。用合成的 AIST++ 风格名单独立检验：不传忽略名单时与旧实现逐项一致；五折测试集互斥且覆盖全部非忽略序列；训练、验证、测试之间没有编舞组泄漏；忽略序列不出现在任何一侧；结果可重复。折内模式下 `raw_suite.py` 训练完直接返回、不构造测试集，旧评估入口拒绝新折目录。
+
+
+### 2026-11-12 · Codex · codex/t2-5-grouped-folds
+
+- 实现 T2.5。用冻结种子 `20261112` 按流派分别打乱编舞组，轮流分配到 5 个测试折。内层验证组数沿用旧代码的 `round(0.15 * 组数)`，有可用组时至少取 1 组。
+- 在服务器生成 `runs/revision/splits/` 的主分析清单和 `runs/revision/splits_all/` 的敏感性分析清单。剔除 45 条记录后，主分析覆盖 1,363 条序列、197 个编舞组，各折测试序列数依次为 273、310、213、295、272。敏感性分析覆盖 1,408 条序列、203 个编舞组。两套清单均通过测试折覆盖、折内隔离及编舞组不跨测试折检查。
+- 训练入口为每次折内运行保存 `revision_split_manifest.json`。长缺口训练核对基础专家的折号、序列名单和训练种子。旧评估入口识别该清单并拒绝读取新折的检查点。
+- 对真实缓存核对两个旧划分种子（`20260815`、`20260829`），训练、验证、测试索引与旧实现逐项一致。通过语法检查和合成数据上的两段折内训练烟雾测试，验证了测试动作隔离、清单一致性及错折、错种子拒绝。下一项为 T2.1，正式 T3.x 实验等待阶段 2 的实现合并。
 
 ### 2026-11-12 · claude · claude/g0-decision-and-protocol
 

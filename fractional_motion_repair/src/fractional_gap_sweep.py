@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from fractional_screen import build_long_expert, build_short_expert, load_checkpoint
 from pilot import DurationAwareExpertRouter, PilotConfig, grouped_split, parameter_count
 from raw_suite import RawWindowDataset, evaluate_detailed
+from revision_splits import require_legacy_runs
 
 
 DEFAULT_GAPS = (24, 36, 48, 60, 72, 84, 96)
@@ -44,6 +45,7 @@ def main() -> None:
     parser.add_argument("--base-runs", nargs="+", type=Path, required=True)
     parser.add_argument("--fractional-runs", nargs="+", type=Path, required=True)
     args = parser.parse_args()
+    require_legacy_runs([*args.base_runs, *args.fractional_runs])
 
     gaps = [int(value) for value in args.gaps.split(",")]
     seeds = [int(value) for value in args.seeds.split(",")]

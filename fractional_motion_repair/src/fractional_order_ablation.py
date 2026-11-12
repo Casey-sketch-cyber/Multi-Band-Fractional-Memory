@@ -12,6 +12,7 @@ from torch.utils.data import DataLoader
 from fractional_screen import build_long_expert, build_short_expert, load_checkpoint
 from pilot import DurationAwareExpertRouter, PilotConfig, grouped_split
 from raw_suite import RawWindowDataset, evaluate_detailed
+from revision_splits import require_legacy_runs
 
 
 MODES = ("learned", "band_centers", "joint_mean", "joint_permuted")
@@ -56,6 +57,7 @@ def main() -> None:
     parser.add_argument("--base-runs", nargs="+", type=Path, required=True)
     parser.add_argument("--fractional-runs", nargs="+", type=Path, required=True)
     args = parser.parse_args()
+    require_legacy_runs([*args.base_runs, *args.fractional_runs])
     seeds = [int(value) for value in args.seeds.split(",")]
     if len(seeds) != len(args.base_runs) or len(seeds) != len(args.fractional_runs):
         raise ValueError("seeds, base runs, and fractional runs must align")

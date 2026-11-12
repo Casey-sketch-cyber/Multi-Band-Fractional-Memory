@@ -8,6 +8,7 @@ import math
 import random
 import re
 import time
+from collections.abc import Set
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
@@ -52,6 +53,8 @@ BODY_PARTS = (
     (13, 15),
     (14, 16),
 )
+
+REVISION_FOLDS = 5
 
 
 @dataclass(frozen=True)
@@ -99,10 +102,21 @@ def choreography_group(name: str) -> tuple[str, str]:
     return genre, f"{genre}_{choreography}"
 
 
-def grouped_split(names: np.ndarray, seed: int) -> dict[str, np.ndarray]:
+def grouped_split(
+    names: np.ndarray,
+    seed: int,
+    *,
+    fold: int | None = None,
+    ignored_names: Set[str] = frozenset(),
+) -> dict[str, np.ndarray]:
+    """Return cache indices for the fixed split or a grouped outer fold."""
+    if fold is not None and not 0 <= fold < REVISION_FOLDS:
+        raise ValueError(f"Fold must be between 0 and {REVISION_FOLDS - 1}")
+    names = names.astype(str)
+    eligible = np.flatnonzero(~np.isin(names, sorted(ignored_names)))
     by_genre: dict[str, list[str]] = {}
     group_for_index: list[str] = []
-    for raw_name in names.astype(str):
+    for raw_name in names[eligible]:
         genre, group = choreography_group(raw_name)
         by_genre.setdefault(genre, []).append(group)
         group_for_index.append(group)
@@ -113,6 +127,18 @@ def grouped_split(names: np.ndarray, seed: int) -> dict[str, np.ndarray]:
         genre_seed = int(hashlib.sha1(f"{seed}:{genre}".encode()).hexdigest()[:8], 16)
         rng = random.Random(genre_seed)
         rng.shuffle(groups)
+        if fold is not None:
+            test_groups = set(groups[fold::REVISION_FOLDS])
+            inner_groups = sorted(set(groups) - test_groups)
+            val_key = f"{seed}:val:{fold}:{genre}"
+            val_seed = int(hashlib.sha1(val_key.encode()).hexdigest()[:8], 16)
+            random.Random(val_seed).shuffle(inner_groups)
+            n_val = max(1, round(0.15 * len(inner_groups)))
+            split_groups["test"].update(test_groups)
+            split_groups["val"].update(inner_groups[:n_val])
+            split_groups["train"].update(inner_groups[n_val:])
+            continue
+
         n_test = max(1, round(0.15 * len(groups)))
         n_val = max(1, round(0.15 * len(groups)))
         if n_test + n_val >= len(groups):
@@ -124,7 +150,7 @@ def grouped_split(names: np.ndarray, seed: int) -> dict[str, np.ndarray]:
     output: dict[str, np.ndarray] = {}
     group_array = np.asarray(group_for_index)
     for split, groups in split_groups.items():
-        output[split] = np.flatnonzero(np.isin(group_array, sorted(groups)))
+        output[split] = eligible[np.isin(group_array, sorted(groups))]
     return output
 
 

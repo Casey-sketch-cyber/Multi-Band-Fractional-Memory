@@ -59,6 +59,23 @@ python src/verify_raw_cache.py
 The cache builder refuses to overwrite existing outputs unless `--force` is
 provided.
 
+## Grouped folds for the Mathematics revision
+
+Generate the five sequence manifests with the frozen split seed from the
+[revision protocol](protocols/mathematics_revision_protocol.md).
+
+```bash
+python src/revision_splits.py --raw-cache-dir data/raw60 \
+  --ignore-list data/downloads/ignore_list.txt --out-dir runs/revision/splits
+```
+
+Pass `--fold 0` through `--fold 4` and `--ignore-list` to `raw_suite.py` and
+`fractional_screen.py` to use a fold for training and inner validation. Each
+run writes `revision_split_manifest.json`. `fractional_screen.py` checks the base
+experts against that manifest and the requested training seed. Use a separate
+output directory with `--include-ignored` for the all-sequence sensitivity
+split. Legacy evaluation entry points reject fold runs.
+
 ## Smoke test
 
 ```bash

@@ -21,13 +21,18 @@ from pilot import (
     FixedKinematicCompletion,
     PilotConfig,
     bone_lengths,
-    grouped_split,
     hankel_low_rank,
     linear_interpolate,
     make_mask,
     parameter_count,
     seed_everything,
     train_model,
+)
+from revision_splits import (
+    SPLIT_MANIFEST,
+    add_fold_arguments,
+    save_training_manifests,
+    training_split,
 )
 from run_suite import DEFAULT_CONDITIONS, build_model
 
@@ -108,15 +113,16 @@ class RawWindowDataset(Dataset[torch.Tensor]):
         return torch.from_numpy(motion)
 
 
-def make_loaders(
+def make_train_val_loaders(
     cache_dir: Path,
     splits: dict[str, np.ndarray],
     config: PilotConfig,
     train_windows: int,
     val_windows: int,
-    test_stride: int,
     quick: bool,
-) -> tuple[DataLoader, DataLoader, DataLoader, RawWindowDataset]:
+    *,
+    num_workers: int = 2,
+) -> tuple[DataLoader, DataLoader]:
     train_dataset = RawWindowDataset(
         cache_dir,
         splits["train"],
@@ -133,18 +139,9 @@ def make_loaders(
         seed=config.seed,
         max_windows=2 if quick else val_windows,
     )
-    test_dataset = RawWindowDataset(
-        cache_dir,
-        splits["test"],
-        config.frames,
-        mode="fixed",
-        seed=config.seed,
-        stride=test_stride,
-        max_windows=2 if quick else None,
-    )
     common = {
         "batch_size": config.batch_size,
-        "num_workers": 2,
+        "num_workers": num_workers,
         "pin_memory": torch.cuda.is_available(),
     }
     train_loader = DataLoader(
@@ -154,7 +151,37 @@ def make_loaders(
         **common,
     )
     val_loader = DataLoader(val_dataset, shuffle=False, **common)
-    test_loader = DataLoader(test_dataset, shuffle=False, **common)
+    return train_loader, val_loader
+
+
+def make_loaders(
+    cache_dir: Path,
+    splits: dict[str, np.ndarray],
+    config: PilotConfig,
+    train_windows: int,
+    val_windows: int,
+    test_stride: int,
+    quick: bool,
+) -> tuple[DataLoader, DataLoader, DataLoader, RawWindowDataset]:
+    train_loader, val_loader = make_train_val_loaders(
+        cache_dir, splits, config, train_windows, val_windows, quick
+    )
+    test_dataset = RawWindowDataset(
+        cache_dir,
+        splits["test"],
+        config.frames,
+        mode="fixed",
+        seed=config.seed,
+        stride=test_stride,
+        max_windows=2 if quick else None,
+    )
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=config.batch_size,
+        shuffle=False,
+        num_workers=2,
+        pin_memory=torch.cuda.is_available(),
+    )
     return train_loader, val_loader, test_loader, test_dataset
 
 
@@ -288,32 +315,37 @@ def main() -> None:
         default=Path("data/raw60"),
     )
     parser.add_argument("--out-dir", type=Path, required=True)
-    parser.add_argument("--seed", type=int, default=20260815)
-    parser.add_argument("--split-seed", type=int, default=20260815)
+    parser.add_argument("--seed", type=int)
+    parser.add_argument("--split-seed", type=int)
+    add_fold_arguments(parser)
     parser.add_argument("--mask-seed", type=int, default=20270815)
     parser.add_argument("--epochs", type=int, default=24)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--train-windows", type=int, default=2)
     parser.add_argument("--val-windows", type=int, default=3)
     parser.add_argument("--test-stride", type=int, default=64)
-    parser.add_argument("--variants", default="patch_transformer,tcn,matched_tcn")
+    parser.add_argument("--variants")
     parser.add_argument("--conditions", default=",".join(DEFAULT_CONDITIONS))
     parser.add_argument("--quick", action="store_true")
     parser.add_argument("--include-rejected-projections", action="store_true")
     args = parser.parse_args()
 
-    variants = tuple(item.strip() for item in args.variants.split(",") if item.strip())
+    default_seed = 20260815 if args.fold is None else 20261201
+    default_variants = (
+        "patch_transformer,tcn,matched_tcn" if args.fold is None else "matched_tcn,gap_router"
+    )
+    variants_arg = default_variants if args.variants is None else args.variants
+    variants = tuple(item.strip() for item in variants_arg.split(",") if item.strip())
     conditions = tuple(item.strip() for item in args.conditions.split(",") if item.strip())
     config = PilotConfig(
-        seed=args.seed,
+        seed=default_seed if args.seed is None else args.seed,
         epochs=3 if args.quick else args.epochs,
         batch_size=min(args.batch_size, 8) if args.quick else args.batch_size,
     )
     seed_everything(config.seed)
-    args.out_dir.mkdir(parents=True, exist_ok=True)
     with np.load(args.raw_cache_dir / "metadata.npz") as metadata:
         names = np.asarray(metadata["names"]).astype(str)
-    splits = grouped_split(names, args.split_seed)
+    splits, split_seed, split_manifest = training_split(names, args, legacy_seed=20260815)
     if args.quick:
         splits = {
             "train": splits["train"][:128],
@@ -326,7 +358,7 @@ def main() -> None:
         "config": asdict(config),
         "fps": 60,
         "window_seconds": config.frames / 60.0,
-        "split_seed": args.split_seed,
+        "split_seed": split_seed,
         "mask_seed": args.mask_seed,
         "split_counts": {key: int(len(value)) for key, value in splits.items()},
         "variants": variants,
@@ -341,23 +373,23 @@ def main() -> None:
         "validation_windows_per_sequence": args.val_windows,
         "test_stride": args.test_stride,
     }
-    (args.out_dir / "raw_suite_manifest.json").write_text(
-        json.dumps(manifest, indent=2), encoding="utf-8"
-    )
+    if split_manifest is not None:
+        manifest.update(fold=args.fold, split_manifest=SPLIT_MANIFEST, test_set_accessed=False)
+    save_training_manifests(args.out_dir / "raw_suite_manifest.json", manifest, split_manifest)
     print(json.dumps(manifest, indent=2), flush=True)
 
     trained: dict[str, nn.Module] = {}
     parameters: dict[str, int] = {"linear": 0, "hankel": 0}
     for variant in variants:
         seed_everything(config.seed)
-        train_loader, val_loader, _, _ = make_loaders(
+        train_loader, val_loader = make_train_val_loaders(
             args.raw_cache_dir,
             splits,
             config,
             args.train_windows,
             args.val_windows,
-            args.test_stride,
             args.quick,
+            num_workers=0 if split_manifest is not None else 2,
         )
         model, model_config = build_model(variant, config)
         model = model.to(device)
@@ -372,6 +404,9 @@ def main() -> None:
             device,
             args.out_dir,
         )
+
+    if split_manifest is not None:
+        return
 
     methods: list[tuple[str, nn.Module | str]] = [("linear", "linear"), ("hankel", "hankel")]
     methods.extend((name, trained[name]) for name in variants)
