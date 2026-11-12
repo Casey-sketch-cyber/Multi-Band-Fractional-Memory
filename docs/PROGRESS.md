@@ -6,23 +6,20 @@
 
 该稿被 *Fractal and Fractional* 拒稿（意见为创新点不足），现改投 *Mathematics*，常规投稿（非特刊），全文重写。修订按 [修订计划](revision/MATHEMATICS_REVISION_PLAN.md) 执行，目前处于阶段 0。AIST++ 缓存已重建，旧固定划分上的 T0.1b 三种子复现通过 MPJPE 容差检查。验收结果见 [pipeline_rebuild_check.csv](../fractional_motion_repair/results/revision/pipeline_rebuild_check.csv)。
 
-**期限：2026-11-17 前投稿。** 实验机是 RTX 4070 Super（12 GB 显存、32 GB 内存）。本周做什么、砍什么、哪天做，见 [docs/revision/ONE_WEEK_SCHEDULE.md](revision/ONE_WEEK_SCHEDULE.md)。
+**期限：2026-11-17 前投稿。** [一周排期](revision/ONE_WEEK_SCHEDULE.md)按 RTX 4070 Super（12 GB 显存、32 GB 内存）估算。T0.1b 实测环境见工作记录。
 
 ## 待办
 
 - **先看一周排期第 4 节的当日安排，再去任务表领任务。** 排期里标为"这一周不做"的任务不要领。
-- T0.1、T0.1b 已完成（PR #3）。今天（11-12，排期 D2）的关键路径：训练 `continued`、`fractional_loss` 两个变体（若尚未训练）→ T0.2（验证集归因比较）、T0.3（逐带诊断）→ 今晚决策门 G0。
-- T0.1b 遗留的记录项，由执行 T0.2 的智能体顺带补上，不单独开任务：
-  - 在本文件记录 AIST++ 下载文件名、字节数、SHA-256，以及 `ignore_list.txt` 的条目数。
-  - 在工作记录里补训练与评估的脚本、提交号、PyTorch/CUDA 版本、GPU 型号。
-  - 把其余 4 种掩码条件的有限窗→分数阶增益与 `scope_results.csv` 对照，并把速度误差、骨长误差和 45 行汇总表一起放进 `results/revision/`。
-  - 排查下面"已知条件"里桥模型系统偏差的原因，限时 30 分钟，查不出就写"原因未明"。
+- T0.1、T0.1b 已完成（PR #3）。旧划分下 `continued` 和 `fractional_loss` 各有三个种子的检查点。排期 D2（11-12）继续 T0.2（验证集归因比较）和 T0.3（逐带诊断），随后进入决策门 G0。
 - 不需要数据和 GPU、可立即并行的任务：T0.4、T1.1、T2.1、T2.4、T2.5、T2.9、T5.1。
 - 作者对 U1–U6 的答复已写入修订计划第 11 节；修订计划和 `DECISIONS.md` 里的决策已由作者确认并合并（PR #1）。下一个需要作者拍板的地方是 G0。
 
 ## 已知条件
 
-- **重建管线与归档存在系统偏差，新实验只在重建管线内部比较。** limb72 上，重建的有限窗桥和分数阶桥 MPJPE 比归档低 1.28%、1.29%（约为归档种子标准差的 22 倍、34 倍，三个种子同向），基础路由器只低 0.55%（种子波动范围内）。因此路由器到桥的增益从归档 5.19% 变为 5.88%（均值之比口径），有限窗到分数阶的差异基本不变（0.271% 对 0.261%）。T0.2 的归因分析和新稿里的所有比较都只用重建结果，归档数字只以"归档汇总值"身份出现在附录。原因尚未排查。
+- **重建管线与归档存在系统偏差，新实验只在重建管线内部比较。** `limb72` 上，重建的有限窗桥和分数阶桥 MPJPE 比归档低 1.28%、1.29%（约为归档种子标准差的 22 倍、34 倍），基础路由器低 0.55%。按测试汇总均值之比，路由器到有限窗桥的增益从归档 5.19% 变为 5.88%，有限窗到分数阶的增益分别为归档 0.261%、重建 0.271%。T0.2 的归因分析和新稿里的所有比较只用重建结果，归档数字在附录注明来源。
+- **桥模型偏差原因未明。** 三个重建种子的基础专家各跑满 24 轮，桥变体各跑满 8 轮，训练历史无提前结束。三个入口脚本与归档提交中的版本一致，CUDA 训练分支启用 AMP。实测环境默认矩阵运算 TF32 关闭、cuDNN TF32 开启，脚本未覆盖这些设置。归档只记载 RTX 3090 推理计时，旧训练的实际轮数、早停、GPU、PyTorch/CUDA 和精度设置无法核对。
+- [五种掩码对照](../fractional_motion_repair/results/revision/pipeline_rebuild_scope_check.csv)按归档口径先逐序列平均三个种子，再按序列等权计算 MPJPE 增益。`temporal32` 和 `temporal48` 的有限窗到分数阶增益重建为 −2.6386%、−2.5836%，归档为 −2.7179%、−2.5972%。
 - 完整复现需要自行取得 AIST++ 数据并生成运行中间文件。图 1、图 2 的最终投稿版来自作者手绘导出。
 - 归档 PDF 与本次重编均为 17 页。原投稿说明中的 16 页记录与归档 PDF 页数不同。
 - 现稿的有限窗对照在长缺口内存在结构性退化（修订计划 D3、命题 P3）。在 T0.3 用真实数据量化之前，不要在任何新文本里把"分数阶优于有限窗"当作已确立的结论。
@@ -31,6 +28,20 @@
 - "DanceRouter"没有发表过，新稿不用这个名称，也不引用。
 
 ## 工作记录
+
+### 2026-11-11 · Codex · codex/t0-1b-review-follow-up
+
+- 补齐 PR #3 的验收记录。[验收表](../fractional_motion_repair/results/revision/pipeline_rebuild_check.csv)增加速度误差和相对骨长误差，2% 判定沿用 MPJPE。核对了[服务器 45 行汇总](../fractional_motion_repair/results/revision/fractional_test_results.csv)的 SHA-256，按旧协议计算了五种掩码的逐序列增益对照。
+- 在服务器重算 AIST++ v1.0 下载文件的大小和 SHA-256。`ignore_list.txt` 有 45 个不同条目，T0.1b 按旧协议保留全部 1,408 条序列。
+
+  | 文件 | 字节数 | SHA-256 |
+  |---|---:|---|
+  | `keypoints3d.zip` | 876142511 | `8b2a3bfcea233b8d1859a0dc93c780a8f9e832136ef6828d0b3ddff640ddcfd` |
+  | `keypoints2d.zip` | 1316187461 | `e108a10718b805f8a909bdb590778934483e7208251ec2aae58693803b0a98d8` |
+  | `ignore_list.txt` | 1217 | `be44c54baa91a1aff18306da2f3fc44abd1adfbb32317ac9f9b1362685415339` |
+
+- 复现使用提交 `dc4662e` 中的 `raw_suite.py`（基础专家）、`fractional_screen.py`（桥和损失对照）及 `fractional_test.py`（冻结测试），运行环境为 PyTorch `2.6.0+cu124`、CUDA 12.4、NVIDIA RTX A6000。
+- 完成 T0.0。GitHub 标签 `v1-fractalfract-submission` 指向投稿归档提交 `4f5724e09957bd2cbba65fcb382fdd6556807cae`。
 
 ### 2026-11-12 · claude · codex/t0-1b-pipeline-rebuild-check（审查与合并）
 
