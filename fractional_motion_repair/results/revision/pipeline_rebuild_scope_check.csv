@@ -1,0 +1,6 @@
+condition,archive_stage,training_seeds,test_sequences,rebuilt_finite_bridge_sequence_mean_mpjpe,rebuilt_fractional_bridge_sequence_mean_mpjpe,rebuilt_finite_to_fractional_gain_percent,archived_finite_to_fractional_gain_percent,gain_difference_percentage_points
+limb72,confirmatory,3,221,0.235821902186,0.235196622870,0.265149,0.278541,-0.013392
+limb48,frozen_secondary,3,221,0.202958481162,0.202952743190,0.002827,0.061340,-0.058513
+mixed,frozen_secondary,3,221,0.109796065574,0.109885109278,-0.081099,-0.062150,-0.018949
+temporal32,frozen_secondary,3,221,0.149160266522,0.153096042160,-2.638622,-2.717940,0.079318
+temporal48,frozen_secondary,3,221,0.198637403414,0.203769435400,-2.583618,-2.597160,0.013542
