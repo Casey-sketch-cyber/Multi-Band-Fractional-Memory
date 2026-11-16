@@ -80,6 +80,10 @@ split. Legacy evaluation entry points reject fold runs.
 
 `fractional_screen.py --variants K0,K1,K2,K3,K4,K5,K6,K7` selects the eight
 kernel variants in the revision protocol. The comparison uses the base loss.
+Use `--variants continued,K5,B3_K5` to train the B0, B2, and B3 comparisons
+from the same base checkpoint. The `B3_` prefix enables projection of the TCN
+residual at both observed endpoints of each bounded gap. The saved variant
+name identifies the projection when loading a trained checkpoint.
 
 ## Smoke test
 
