@@ -96,16 +96,18 @@ for the ordered windows supplied to the evaluator.
 | `mpjpe_joint_00`–`mpjpe_joint_16` | Normalized MPJPE at missing frames for each joint in the cached COCO order. |
 
 The last three metrics pool eligible observations and leave unsupported values
-blank in CSV output. The legacy `mpjpe` field still pools missing joint-frames.
+blank in CSV output. The `mpjpe` field pools missing joint-frames.
 
 For millimeters, pass the per-sequence scales returned by
 `load_aist_smpl_scales` in `revision_metrics.py` as `smpl_scales`.
 The archived evaluator `fractional_test.py` exposes the same diagnostics with
-`--extended-metrics`. Its `--aist-motion-zip data/downloads/motions.zip` option
-also enables the diagnostics and reads scales from the official
-[AIST++ motion release](https://github.com/google/aistplusplus_dataset/releases/tag/v1.0).
-Use a trusted archive containing the AIST++ pickle annotations. The current
-release archive provides scales for 411 of the 1,408 cached sequences.
+`--extended-metrics`. To load windows in the evaluator process, pass
+`--num-workers 0`. The `--aist-motion-zip data/downloads/motions.zip` option enables
+the diagnostics and reads scales from a trusted AIST++ motion archive.
+The current release covers 411 of the 1,408 cached sequences. Sequences
+without a conversion have a blank millimeter value.
+[AIST++ motion release](https://github.com/google/aistplusplus_dataset/releases/tag/v1.0)
+
 The conversion uses the dataset's documented SMPL fit and represents errors
 at the reference body's scale. [AIST++ scale explanation](https://github.com/google/aistplusplus_api/issues/9#issuecomment-782814093)
 

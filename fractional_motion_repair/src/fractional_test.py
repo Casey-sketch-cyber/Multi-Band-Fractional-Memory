@@ -55,6 +55,12 @@ def main() -> None:
         help="Trusted official AIST++ motions.zip for SMPL-reference mm (enables extended metrics)",
     )
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument(
+        "--num-workers",
+        type=int,
+        default=2,
+        help="Data loader worker count (0 loads windows in the evaluator process)",
+    )
     parser.add_argument("--stage", default="focused_confirmatory_test")
     parser.add_argument(
         "--protocol",
@@ -102,7 +108,7 @@ def main() -> None:
         dataset,
         batch_size=args.batch_size,
         shuffle=False,
-        num_workers=2,
+        num_workers=args.num_workers,
         pin_memory=torch.cuda.is_available(),
     )
     extended_metrics = args.extended_metrics or args.aist_motion_zip is not None
