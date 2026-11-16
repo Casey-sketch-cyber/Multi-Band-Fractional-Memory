@@ -73,6 +73,13 @@ KERNEL_VARIANTS = {
     "K6": {"mode": "free"},
     "K7": {"mode": "tempered", "order_ranges": ((0.35, 0.65),)},
 }
+REVISION_KERNEL_VARIANTS = {
+    **KERNEL_VARIANTS,
+    **{
+        f"B3_{name}": {**options, "output_projection": True}
+        for name, options in KERNEL_VARIANTS.items()
+    },
+}
 
 
 def write_csv(path: Path, rows: list[dict[str, object]]) -> None:
@@ -113,7 +120,14 @@ def make_long_gap_train_mask(
 
 def load_checkpoint(module: nn.Module, path: Path) -> dict[str, list[str]]:
     payload = torch.load(path, map_location="cpu", weights_only=False)
-    result = module.load_state_dict(payload["model"], strict=False)
+    state = payload["model"]
+    if "backbone.memory.projection.weight" in state:
+        options = REVISION_KERNEL_VARIANTS.get(payload.get("variant"), {})
+        saved_projection = options.get("output_projection", False)
+        backbone = getattr(module, "backbone", module)
+        if saved_projection != getattr(backbone, "output_projection", False):
+            raise RuntimeError(f"Output endpoint projection differs from checkpoint {path}")
+    result = module.load_state_dict(state, strict=False)
     unexpected = list(result.unexpected_keys)
     missing = list(result.missing_keys)
     if unexpected:
@@ -158,8 +172,8 @@ def build_long_expert(variant: str) -> tuple[nn.Module, float]:
             mode="fractional",
             learn_orders=False,
         )
-    elif variant in KERNEL_VARIANTS:
-        backbone = MemoryTemporalConvNet(frames=128, **KERNEL_VARIANTS[variant])
+    elif variant in REVISION_KERNEL_VARIANTS:
+        backbone = MemoryTemporalConvNet(frames=128, **REVISION_KERNEL_VARIANTS[variant])
     else:
         raise ValueError(f"Unknown variant: {variant}")
     model = GapAdaptiveResidualCompletion(
@@ -369,7 +383,7 @@ def main() -> None:
     default_variants = ",".join(VARIANTS) if args.fold is None else "continued"
     variants_arg = default_variants if args.variants is None else args.variants
     variants = tuple(item.strip() for item in variants_arg.split(",") if item.strip())
-    unknown = sorted(set(variants) - {*VARIANTS, *KERNEL_VARIANTS})
+    unknown = sorted(set(variants) - {*VARIANTS, *REVISION_KERNEL_VARIANTS})
     if unknown:
         raise ValueError(f"Unknown variants: {unknown}")
     config = PilotConfig(
@@ -435,7 +449,9 @@ def main() -> None:
     }
     if split_manifest is not None:
         manifest.update(stage="revision_validation_only", fold=args.fold, split_manifest=SPLIT_MANIFEST)
-    kernel_variants = {name: KERNEL_VARIANTS[name] for name in variants if name in KERNEL_VARIANTS}
+    kernel_variants = {
+        name: REVISION_KERNEL_VARIANTS[name] for name in variants if name in REVISION_KERNEL_VARIANTS
+    }
     if kernel_variants:
         manifest["kernel_variants"] = kernel_variants
         manifest["initial_tempering_decay"] = INITIAL_TEMPERING_DECAY

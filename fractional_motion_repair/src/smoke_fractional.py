@@ -5,11 +5,12 @@ import torch
 from fractional_models import (
     MemoryTemporalConvNet,
     TemporalMemoryAdapter,
+    endpoint_constrained_bridge,
     gl_integral_coefficients,
     validate_fractional_definition,
 )
 from fractional_screen import KERNEL_VARIANTS, build_long_expert
-from pilot import GapAdaptiveResidualCompletion, TemporalConvNet, parameter_count
+from pilot import GapAdaptiveResidualCompletion, TemporalConvNet, linear_interpolate, parameter_count
 
 
 @torch.no_grad()
@@ -106,6 +107,63 @@ def check_revision_kernels(base: TemporalConvNet, motion: torch.Tensor, mask: to
     return parameter_counts
 
 
+def check_output_projection() -> None:
+    frames, joints = 16, 5
+    motion = torch.randn(1, frames, joints, 3, dtype=torch.float64)
+    mask = torch.ones_like(motion[..., :1])
+    bounded_gaps = ((0, 2, 7), (0, 9, 13), (3, 4, 5))
+    for joint, start, stop in (*bounded_gaps, (1, 0, 4), (1, 11, frames), (2, 0, frames)):
+        mask[:, start:stop, joint] = 0
+
+    model = MemoryTemporalConvNet(
+        frames, mode="tempered", joints=joints, width=12, dilations=(1, 2), output_projection=True
+    ).double()
+    with torch.no_grad():
+        model.output.weight.normal_(std=0.1)
+        model.output.bias.fill_(0.4)
+
+    outputs = []
+    hook = model.output.register_forward_hook(lambda _layer, _args, output: outputs.append(output.detach()))
+    prediction = model(motion, mask)
+    hook.remove()
+    raw_residual = outputs[0].transpose(1, 2).reshape_as(motion)
+
+    initial = linear_interpolate(motion, mask)
+    expected = initial.clone()
+    bounded = torch.zeros_like(mask, dtype=torch.bool)
+    for joint, start, stop in bounded_gaps:
+        weight = torch.arange(1, stop - start + 1, dtype=motion.dtype) / (stop - start + 1)
+        left = raw_residual[:, start - 1, joint].unsqueeze(1)
+        right = raw_residual[:, stop, joint].unsqueeze(1)
+        trend = left + weight[None, :, None] * (right - left)
+        expected[:, start:stop, joint] += raw_residual[:, start:stop, joint] - trend
+        bounded[:, start:stop, joint] = True
+    expected[:, :4, 1] += raw_residual[:, :4, 1] - raw_residual[:, 4:5, 1]
+    expected[:, 11:, 1] += raw_residual[:, 11:, 1] - raw_residual[:, 10:11, 1]
+    expected[:, :, 2] += raw_residual[:, :, 2]
+    torch.testing.assert_close(prediction, expected, rtol=0, atol=1e-12)
+
+    signal = raw_residual.flatten(2).transpose(1, 2)
+    increments = signal.diff(dim=-1, prepend=signal[..., :1])
+    visibility = mask.expand_as(motion).flatten(2).transpose(1, 2)
+    original_correction = endpoint_constrained_bridge(increments, visibility)
+    original = initial + original_correction.transpose(1, 2).reshape_as(motion)
+    bounded = bounded.expand_as(motion)
+    torch.testing.assert_close(prediction[bounded], original[bounded], rtol=0, atol=0)
+
+    # The one-sided gaps join the observations at frames 4 and 10.
+    torch.testing.assert_close(prediction[:, (4, 10), 1], motion[:, (4, 10), 1], rtol=0, atol=0)
+    observed = mask.expand_as(motion).bool()
+    torch.testing.assert_close(prediction[observed], motion[observed], rtol=0, atol=0)
+    changed = torch.where(observed, motion, motion + 100)
+    with torch.no_grad():
+        torch.testing.assert_close(prediction, model(changed, mask), rtol=0, atol=0)
+    prediction[~observed].square().mean().backward()
+    gradient = model.output.weight.grad
+    if gradient is None or not torch.isfinite(gradient).all() or not gradient.any():
+        raise RuntimeError("B3 projection did not pass a finite, nonzero gradient")
+
+
 def main() -> None:
     validate_fractional_definition()
     torch.manual_seed(7)
@@ -165,6 +223,7 @@ def main() -> None:
         raise RuntimeError("Non-finite memory gradient")
 
     kernel_parameters = check_revision_kernels(base, motion, mask)
+    check_output_projection()
     output = {
         "base_parameters": parameter_count(base),
         "fractional_parameters": parameter_count(fractional),
@@ -175,6 +234,7 @@ def main() -> None:
         "observed_projection_exact": True,
         "masked_ground_truth_invariant": True,
         "revision_kernel_parameters": kernel_parameters,
+        "output_endpoint_projection_checked": True,
     }
     print(output)
 

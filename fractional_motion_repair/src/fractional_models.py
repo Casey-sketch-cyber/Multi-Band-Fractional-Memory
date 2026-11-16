@@ -184,7 +184,10 @@ def masked_bidirectional_context(
 def endpoint_constrained_bridge(
     residual_increments: torch.Tensor,
     visibility: torch.Tensor,
+    *,
+    output_residual: torch.Tensor | None = None,
 ) -> torch.Tensor:
+    """Bridge bounded gaps and optionally anchor output residuals in edge gaps."""
     frames = residual_increments.shape[-1]
     observed = visibility.bool()
     indices = torch.arange(
@@ -201,7 +204,9 @@ def endpoint_constrained_bridge(
         ).cummin(dim=-1).values,
         dims=(-1,),
     )
-    has_two_endpoints = (previous >= 0) & (following < frames)
+    has_left = previous >= 0
+    has_right = following < frames
+    has_two_endpoints = has_left & has_right
     previous_clamped = previous.clamp(0, frames - 1)
     following_clamped = following.clamp(0, frames - 1)
     cumulative = residual_increments.cumsum(dim=-1)
@@ -214,6 +219,14 @@ def endpoint_constrained_bridge(
         following - previous
     ).clamp_min(1).to(residual_increments.dtype)
     correction = from_left - fraction * whole_gap
+    if output_residual is not None:
+        anchor = torch.where(
+            has_left,
+            output_residual.gather(-1, previous_clamped),
+            torch.where(has_right, output_residual.gather(-1, following_clamped), 0.0),
+        )
+        correction = torch.where(has_two_endpoints, correction, output_residual - anchor)
+        return torch.where(~observed, correction, 0.0)
     return torch.where(~observed & has_two_endpoints, correction, 0.0)
 
 
@@ -376,7 +389,7 @@ class TemporalMemoryAdapter(nn.Module):
 
 
 class MemoryTemporalConvNet(nn.Module):
-    """TCN completion backbone with an input-side memory bridge."""
+    """TCN with a memory bridge and optional output endpoint projection."""
 
     def __init__(
         self,
@@ -390,11 +403,13 @@ class MemoryTemporalConvNet(nn.Module):
         *,
         order_ranges: tuple[tuple[float, float], ...] = DEFAULT_ORDER_RANGES,
         finite_windows: tuple[int, ...] = DEFAULT_FINITE_WINDOWS,
+        output_projection: bool = False,
     ) -> None:
         super().__init__()
         channels = joints * 4
         self.frames = frames
         self.joints = joints
+        self.output_projection = output_projection
         self.input = nn.Conv1d(channels, width, kernel_size=1)
         self.memory = TemporalMemoryAdapter(
             channels=joints * 3,
@@ -429,7 +444,15 @@ class MemoryTemporalConvNet(nn.Module):
         hidden = self.input(features)
         for block in self.blocks:
             hidden = hidden + block(hidden)
-        residual = self.output(hidden).transpose(1, 2).reshape_as(initial)
+        residual = self.output(hidden)
+        if self.output_projection:
+            # Accumulate in the motion dtype when the TCN uses mixed precision.
+            residual = residual.to(initial.dtype)
+            increments = residual.diff(dim=-1, prepend=residual[..., :1])
+            residual = endpoint_constrained_bridge(
+                increments, visibility, output_residual=residual
+            )
+        residual = residual.transpose(1, 2).reshape_as(initial)
         prediction = initial + residual
         return torch.where(mask.bool(), motion, prediction)
 
