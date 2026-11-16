@@ -6,6 +6,7 @@ import hashlib
 import json
 import time
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import asdict
 from pathlib import Path
 
@@ -27,6 +28,12 @@ from pilot import (
     parameter_count,
     seed_everything,
     train_model,
+)
+from revision_metrics import (
+    COCO_JOINTS,
+    diagnostic_fields,
+    mean_or_none,
+    window_diagnostic_totals,
 )
 from revision_splits import (
     SPLIT_MANIFEST,
@@ -57,6 +64,7 @@ class RawWindowDataset(Dataset[torch.Tensor]):
             self.names = np.asarray(metadata["names"]).astype(str)
             self.lengths = np.asarray(metadata["lengths"], dtype=np.int64)
             self.offsets = np.asarray(metadata["offsets"], dtype=np.int64)
+            self.scales = metadata["scales"] if "scales" in metadata else None
         self.frames = frames
         self.mode = mode
         self.seed = seed
@@ -216,12 +224,18 @@ def evaluate_detailed(
     mask_seed: int,
     device: torch.device,
     config: PilotConfig,
-) -> tuple[dict[str, float], list[dict[str, object]]]:
+    *,
+    extended_metrics: bool = False,
+    smpl_scales: Mapping[str, float] | None = None,
+) -> tuple[dict[str, float | int | None], list[dict[str, object]]]:
+    """Evaluate an ordered loader over the supplied window dataset."""
     if isinstance(method, nn.Module):
         method.eval()
     generator = torch.Generator().manual_seed(mask_seed)
     totals = defaultdict(float)
     per_sequence: dict[int, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+    per_sequence_diagnostics: dict[int, np.ndarray] = {}
+    smpl_scales = smpl_scales or {}
     cursor = 0
     elapsed = 0.0
     timed_windows = 0
@@ -254,27 +268,45 @@ def evaluate_detailed(
         distance = torch.linalg.vector_norm(prediction - target, dim=-1)
         pred_velocity = prediction[:, 1:] - prediction[:, :-1]
         true_velocity = target[:, 1:] - target[:, :-1]
-        velocity_distance = torch.linalg.vector_norm(pred_velocity - true_velocity, dim=-1)
+        velocity_residual = pred_velocity - true_velocity
+        velocity_distance = torch.linalg.vector_norm(velocity_residual, dim=-1)
         transition = missing[:, 1:] | missing[:, :-1]
         pred_bone = bone_lengths(prediction)
         true_bone = bone_lengths(target)
         bone_missing = missing[:, :, left] | missing[:, :, right]
         bone_relative = (pred_bone - true_bone).abs() / true_bone.clamp_min(1e-3)
+        batch_diagnostics = (
+            window_diagnostic_totals(distance, velocity_residual, missing)
+            if extended_metrics
+            else None
+        )
 
         for item, sequence_index in enumerate(sequence_indices):
             values = per_sequence[sequence_index]
-            values["distance"] += float(distance[item][missing[item]].sum())
-            values["points"] += float(missing[item].sum())
+            distance_sum = float(distance[item][missing[item]].sum())
+            points = float(missing[item].sum())
+            values["distance"] += distance_sum
+            values["points"] += points
             values["velocity"] += float(velocity_distance[item][transition[item]].sum())
             values["transitions"] += float(transition[item].sum())
             values["bone"] += float(bone_relative[item][bone_missing[item]].sum())
             values["bones"] += float(bone_missing[item].sum())
             values["windows"] += 1.0
+            if batch_diagnostics is not None:
+                if sequence_index not in per_sequence_diagnostics:
+                    per_sequence_diagnostics[sequence_index] = batch_diagnostics[item].astype(
+                        np.float64
+                    )
+                else:
+                    per_sequence_diagnostics[sequence_index] += batch_diagnostics[item]
+                if points:
+                    values["window_mpjpe_sum"] += distance_sum / points
+                    values["windows_with_missing"] += 1.0
 
     for values in per_sequence.values():
         for key in ("distance", "points", "velocity", "transitions", "bone", "bones"):
             totals[key] += values[key]
-    aggregate = {
+    aggregate: dict[str, float | int | None] = {
         "mpjpe": totals["distance"] / max(totals["points"], 1.0),
         "velocity_error": totals["velocity"] / max(totals["transitions"], 1.0),
         "bone_relative_error": totals["bone"] / max(totals["bones"], 1.0),
@@ -283,17 +315,56 @@ def evaluate_detailed(
         "test_sequences": float(len(per_sequence)),
     }
     sequence_rows: list[dict[str, object]] = []
+    window_means: list[float] = []
+    raw_means: list[float] = []
+    mm_means: list[float] = []
+    diagnostic_totals = np.zeros((2 + COCO_JOINTS, 2), dtype=np.float64)
     for sequence_index, values in sorted(per_sequence.items()):
-        sequence_rows.append(
-            {
-                "sequence_index": sequence_index,
-                "sequence": dataset.names[sequence_index],
-                "windows": int(values["windows"]),
-                "mpjpe": values["distance"] / max(values["points"], 1.0),
-                "velocity_error": values["velocity"] / max(values["transitions"], 1.0),
-                "bone_relative_error": values["bone"] / max(values["bones"], 1.0),
-                "missing_points": int(values["points"]),
-            }
+        name = dataset.names[sequence_index]
+        row: dict[str, object] = {
+            "sequence_index": sequence_index,
+            "sequence": name,
+            "windows": int(values["windows"]),
+            "mpjpe": values["distance"] / max(values["points"], 1.0),
+            "velocity_error": values["velocity"] / max(values["transitions"], 1.0),
+            "bone_relative_error": values["bone"] / max(values["bones"], 1.0),
+            "missing_points": int(values["points"]),
+        }
+        if extended_metrics:
+            window_mean = mean_or_none(values["window_mpjpe_sum"], values["windows_with_missing"])
+            raw_mean = (
+                window_mean * float(dataset.scales[sequence_index])
+                if window_mean is not None and dataset.scales is not None
+                else None
+            )
+            smpl_scale = smpl_scales.get(name)
+            mm_mean = (
+                raw_mean * 1000.0 / smpl_scale
+                if raw_mean is not None and smpl_scale is not None
+                else None
+            )
+            if window_mean is not None:
+                window_means.append(window_mean)
+            if raw_mean is not None:
+                raw_means.append(raw_mean)
+            if mm_mean is not None:
+                mm_means.append(mm_mean)
+            sequence_diagnostics = per_sequence_diagnostics[sequence_index]
+            diagnostic_totals += sequence_diagnostics
+            row.update(
+                mpjpe_window_mean=window_mean,
+                mpjpe_raw_units=raw_mean,
+                mpjpe_mm=mm_mean,
+                **diagnostic_fields(sequence_diagnostics),
+            )
+        sequence_rows.append(row)
+    if extended_metrics:
+        aggregate.update(
+            mpjpe_window_mean=mean_or_none(sum(window_means), len(window_means)),
+            mpjpe_raw_units=mean_or_none(sum(raw_means), len(raw_means)),
+            mpjpe_mm=mean_or_none(sum(mm_means), len(mm_means)),
+            mpjpe_mm_sequences=len(mm_means),
+            **diagnostic_fields(diagnostic_totals),
         )
     return aggregate, sequence_rows
 

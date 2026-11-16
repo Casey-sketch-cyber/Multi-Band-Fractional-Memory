@@ -81,6 +81,36 @@ split. Legacy evaluation entry points reject fold runs.
 `fractional_screen.py --variants K0,K1,K2,K3,K4,K5,K6,K7` selects the eight
 kernel variants in the revision protocol. The comparison uses the base loss.
 
+### Additional evaluation metrics
+
+`evaluate_detailed(..., extended_metrics=True)` computes the following fields
+for the ordered windows supplied to the evaluator.
+
+| Field | Definition |
+|---|---|
+| `mpjpe_window_mean` | Mean missing-joint position error per window, averaged across windows within each sequence. The aggregate gives each sequence equal weight. |
+| `mpjpe_raw_units` | The same score multiplied by the sequence's torso scale in `metadata.npz`, yielding AIST++ reconstruction units. |
+| `mpjpe_mm` | The reconstruction-unit score multiplied by `1000 / smpl_scaling`, yielding millimeters at the SMPL reference scale. The aggregate averages the sequences with a conversion and reports their count in `mpjpe_mm_sequences`. |
+| `endpoint_velocity_jump_error` | Mean norm of the predicted minus true velocity jump at observed boundary frames. Each eligible joint has a missing neighbor on one side and an observed neighbor on the other. The unit is torso lengths per frame. |
+| `acceleration_error` | Mean norm of the error in the centered second difference over joint triplets containing a missing frame. The unit is torso lengths per frame squared. |
+| `mpjpe_joint_00`–`mpjpe_joint_16` | Normalized MPJPE at missing frames for each joint in the cached COCO order. |
+
+The last three metrics pool eligible observations and leave unsupported values
+blank in CSV output. The `mpjpe` field pools missing joint-frames.
+
+For millimeters, pass the per-sequence scales returned by
+`load_aist_smpl_scales` in `revision_metrics.py` as `smpl_scales`.
+The archived evaluator `fractional_test.py` exposes the same diagnostics with
+`--extended-metrics`. To load windows in the evaluator process, pass
+`--num-workers 0`. The `--aist-motion-zip data/downloads/motions.zip` option enables
+the diagnostics and reads scales from a trusted AIST++ motion archive.
+The current release covers 411 of the 1,408 cached sequences. Sequences
+without a conversion have a blank millimeter value.
+[AIST++ motion release](https://github.com/google/aistplusplus_dataset/releases/tag/v1.0)
+
+The conversion uses the dataset's documented SMPL fit and represents errors
+at the reference body's scale. [AIST++ scale explanation](https://github.com/google/aistplusplus_api/issues/9#issuecomment-782814093)
+
 ## Smoke test
 
 ```bash
