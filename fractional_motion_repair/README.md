@@ -87,6 +87,32 @@ between endpoint residuals. A one-sided gap subtracts its observed endpoint
 residual. A gap with no observed endpoint uses the TCN residual directly. The
 saved variant name identifies the projection when loading a checkpoint.
 
+### Milestone B bridge ablation
+
+Train `matched_tcn,gap_router` with `raw_suite.py` for each of the five folds
+and seeds 20261201–20261203. Train `continued,K5,B3_K5` with
+`fractional_screen.py` using the corresponding base run. Store each pair
+under `runs/revision/foldF/seedS/{base,bridges}`. For example, evaluate the
+first pair and combine the complete set of 15 evaluations with these commands.
+
+```bash
+python src/bridge_ablation.py evaluate --fold 0 --seed 20261201 \
+  --raw-cache-dir data/raw60 --ignore-list data/downloads/ignore_list.txt \
+  --base-run runs/revision/fold0/seed20261201/base \
+  --bridge-run runs/revision/fold0/seed20261201/bridges \
+  --out-dir runs/revision/fold0/seed20261201/validation \
+  --aist-motion-zip data/downloads/motions.zip
+python src/bridge_ablation.py summarize --runs-dir runs/revision \
+  --out-dir results/revision
+```
+
+The evaluator uses the inner validation sequences, 128-frame windows at stride
+128, and the ten conditions and mask seeds in the frozen protocol. It records
+normalized MPJPE averaged first within each sequence and then across sequences,
+available millimeter coverage, and the total deployed parameters. The summary
+requires all 450 fold × seed × bridge × condition cells. Its printed bridge means
+give each fold, training seed, and condition equal weight.
+
 ### Additional evaluation metrics
 
 `evaluate_detailed(..., extended_metrics=True)` computes the following fields
