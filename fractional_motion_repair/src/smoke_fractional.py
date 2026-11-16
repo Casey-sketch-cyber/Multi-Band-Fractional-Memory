@@ -5,6 +5,7 @@ import torch
 from fractional_models import (
     MemoryTemporalConvNet,
     TemporalMemoryAdapter,
+    endpoint_constrained_bridge,
     gl_integral_coefficients,
     validate_fractional_definition,
 )
@@ -127,17 +128,31 @@ def check_output_projection() -> None:
     hook.remove()
     raw_residual = outputs[0].transpose(1, 2).reshape_as(motion)
 
-    # Compare to the explicit endpoint formula for each bounded gap.
     initial = linear_interpolate(motion, mask)
     expected = initial.clone()
+    bounded = torch.zeros_like(mask, dtype=torch.bool)
     for joint, start, stop in bounded_gaps:
         weight = torch.arange(1, stop - start + 1, dtype=motion.dtype) / (stop - start + 1)
         left = raw_residual[:, start - 1, joint].unsqueeze(1)
         right = raw_residual[:, stop, joint].unsqueeze(1)
         trend = left + weight[None, :, None] * (right - left)
         expected[:, start:stop, joint] += raw_residual[:, start:stop, joint] - trend
+        bounded[:, start:stop, joint] = True
+    expected[:, :4, 1] += raw_residual[:, :4, 1] - raw_residual[:, 4:5, 1]
+    expected[:, 11:, 1] += raw_residual[:, 11:, 1] - raw_residual[:, 10:11, 1]
+    expected[:, :, 2] += raw_residual[:, :, 2]
     torch.testing.assert_close(prediction, expected, rtol=0, atol=1e-12)
 
+    signal = raw_residual.flatten(2).transpose(1, 2)
+    increments = signal.diff(dim=-1, prepend=signal[..., :1])
+    visibility = mask.expand_as(motion).flatten(2).transpose(1, 2)
+    original_correction = endpoint_constrained_bridge(increments, visibility)
+    original = initial + original_correction.transpose(1, 2).reshape_as(motion)
+    bounded = bounded.expand_as(motion)
+    torch.testing.assert_close(prediction[bounded], original[bounded], rtol=0, atol=0)
+
+    # The one-sided gaps join the observations at frames 4 and 10.
+    torch.testing.assert_close(prediction[:, (4, 10), 1], motion[:, (4, 10), 1], rtol=0, atol=0)
     observed = mask.expand_as(motion).bool()
     torch.testing.assert_close(prediction[observed], motion[observed], rtol=0, atol=0)
     changed = torch.where(observed, motion, motion + 100)

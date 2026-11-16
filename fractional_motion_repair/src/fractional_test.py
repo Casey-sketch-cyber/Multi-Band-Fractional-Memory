@@ -17,6 +17,7 @@ from fractional_screen import (
 )
 from pilot import DurationAwareExpertRouter, PilotConfig, grouped_split, parameter_count
 from raw_suite import RawWindowDataset, evaluate_detailed
+from revision_metrics import load_aist_smpl_scales
 from revision_splits import require_legacy_runs
 
 
@@ -43,7 +44,23 @@ def main() -> None:
     parser.add_argument("--split-seed", type=int, default=20260829)
     parser.add_argument("--test-mask-seed", type=int, default=20270829)
     parser.add_argument("--test-stride", type=int, default=128)
+    parser.add_argument(
+        "--extended-metrics",
+        action="store_true",
+        help="Include endpoint velocity-jump, acceleration, and per-joint errors",
+    )
+    parser.add_argument(
+        "--aist-motion-zip",
+        type=Path,
+        help="Trusted official AIST++ motions.zip for SMPL-reference mm (enables extended metrics)",
+    )
     parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument(
+        "--num-workers",
+        type=int,
+        default=2,
+        help="Data loader worker count (0 loads windows in the evaluator process)",
+    )
     parser.add_argument("--stage", default="focused_confirmatory_test")
     parser.add_argument(
         "--protocol",
@@ -91,8 +108,17 @@ def main() -> None:
         dataset,
         batch_size=args.batch_size,
         shuffle=False,
-        num_workers=2,
+        num_workers=args.num_workers,
         pin_memory=torch.cuda.is_available(),
+    )
+    extended_metrics = args.extended_metrics or args.aist_motion_zip is not None
+    smpl_scales = (
+        load_aist_smpl_scales(
+            args.aist_motion_zip,
+            (dataset.names[index] for index, _ in dataset.records),
+        )
+        if args.aist_motion_zip is not None
+        else None
     )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     result_rows: list[dict[str, object]] = []
@@ -113,6 +139,10 @@ def main() -> None:
         "fractional_variant": args.fractional_variant,
         "fractional_checkpoint": args.fractional_checkpoint,
     }
+    if extended_metrics:
+        manifest["extended_metrics"] = True
+        manifest["aist_motion_zip"] = args.aist_motion_zip.name if args.aist_motion_zip else None
+        manifest["aist_motion_sequences"] = len(smpl_scales or {})
     (args.out_dir / "test_manifest.json").write_text(
         json.dumps(manifest, indent=2), encoding="utf-8"
     )
@@ -163,6 +193,8 @@ def main() -> None:
                     mask_seed,
                     device,
                     config,
+                    extended_metrics=extended_metrics,
+                    smpl_scales=smpl_scales,
                 )
                 result = {
                     "seed": seed,
