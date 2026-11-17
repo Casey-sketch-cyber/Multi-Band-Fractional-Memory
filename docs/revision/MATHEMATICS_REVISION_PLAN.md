@@ -169,6 +169,10 @@ P1–P3 已由 [check_kernel_claims.py](check_kernel_claims.py) 数值核对通�
 ### 5.2 代码
 
 - **核族**（T2.1）：`TemporalMemoryAdapter` 增加 `mode`：`instant`、`integer`（保留）、`fractional`（保留）、`exponential`、`tempered`、`free`。`tempered` 每带两个标量参数（β ∈ (0,1]，λ ≥ 0），跨关节共享，理由是现稿的阶数消融显示逐关节学习阶没有收益。`free` 是每带一个 softmax 参数化的 97 抽头非负核。有限窗增加可配置窗宽。
+- **掩码双向上下文统一使用至少 float32 精度**（PR #15，2026-11-17）。两侧可见性加权卷积和分母归一化放在关闭 autocast 的区域，float64 输入保留原精度。TCN 使用原 AMP 配置。训练逐批检查损失、反缩放梯度、梯度范数和更新后的参数，并核查验证指标。出现非有限值时，训练会停止并保存诊断。该修正在新协议测试集评估前实施，方法节需说明数值精度与失败处理。
+
+  Automatic mixed precision is used for the TCN. The visibility-weighted convolutions and their normalization are evaluated in float32, with autocast disabled for this region. Kernel parameters follow the prescribed initialization, parameterization and learning-rate multiplier. Each training step checks the loss, unscaled gradients, gradient norm and updated parameters for finite values. Validation scores are also checked. A non-finite value terminates training and produces a diagnostic record.
+
 - **提速**（T2.2）：阶固定或跨关节共享时缓存系数；三个带合并成一次分组卷积。目标是把分数阶路径的延迟降到接近有限窗路径，实测为准。
 - **输出侧端点投影**（T2.3）：对 TCN 输出残差 R 的一阶差分再做一次 `endpoint_constrained_bridge`，等价于
 
