@@ -265,7 +265,7 @@ P1–P3 已由 [check_kernel_claims.py](check_kernel_claims.py) 数值核对通�
 
 | ID | 任务 | 依赖 | 产出 | 状态 |
 |---|---|---|---|---|
-| T3.1 | 桥变体 B0–B3 | T0.4、T2.3、T2.4、T2.5 | `results/revision/bridge_ablation.csv` | 进行中(Codex) |
+| T3.1 | 桥变体 B0、B2_K5、B3_K5 | T0.4、T2.3、T2.4、T2.5 | `results/revision/bridge_ablation.csv` | 完成(PR #15) |
 | T3.2 | 核变体 K0–K7 | T0.4、T2.1、T2.5 | `results/revision/kernel_ablation.csv` | 待办 |
 | T3.3 | 所选方法对全部基线的主表 | T2.8、T3.1、T3.2、G1 | `results/revision/main_table.csv` | 待办 |
 | T3.4 | 时长响应曲线，含全部核变体 | T3.2 | `results/revision/duration_response.csv` | 待办 |
