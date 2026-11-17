@@ -7,10 +7,39 @@ from fractional_models import (
     TemporalMemoryAdapter,
     endpoint_constrained_bridge,
     gl_integral_coefficients,
+    masked_bidirectional_context,
+    tempered_gl_coefficients,
     validate_fractional_definition,
 )
 from fractional_screen import KERNEL_VARIANTS, build_long_expert
 from pilot import GapAdaptiveResidualCompletion, TemporalConvNet, linear_interpolate, parameter_count
+
+
+def check_sparse_context_gradients() -> None:
+    devices = [torch.device("cpu")]
+    if torch.cuda.is_available():
+        devices.append(torch.device("cuda"))
+    for device in devices:
+        for visible_frame in (None, 7, 77):
+            results = []
+            for amp_enabled in (False, True):
+                signal = torch.full((1, 1, 128), 0.1, device=device, requires_grad=True)
+                visibility = torch.zeros_like(signal)
+                if visible_frame is not None:
+                    visibility[..., visible_frame] = 1.0
+                beta = torch.tensor([0.09], device=device, requires_grad=True)
+                decay = torch.tensor([0.05], device=device, requires_grad=True)
+                amp_dtype = torch.float16 if device.type == "cuda" else torch.bfloat16
+                with torch.autocast(device_type=device.type, dtype=amp_dtype, enabled=amp_enabled):
+                    coefficients = tempered_gl_coefficients(beta, decay, 97).T
+                    context = masked_bidirectional_context(signal, visibility, coefficients)
+                    loss = context[..., 77].sum() * 65536.0
+                gradients = torch.autograd.grad(loss, (signal, beta, decay))
+                if not all(torch.isfinite(gradient).all() for gradient in gradients):
+                    raise RuntimeError("Sparse normalized context produced a non-finite AMP gradient")
+                torch.testing.assert_close(context, signal, rtol=1e-6, atol=1e-7)
+                results.append((context.detach(), gradients))
+            torch.testing.assert_close(results[0], results[1], rtol=0, atol=0)
 
 
 @torch.no_grad()
@@ -166,6 +195,7 @@ def check_output_projection() -> None:
 
 def main() -> None:
     validate_fractional_definition()
+    check_sparse_context_gradients()
     torch.manual_seed(7)
     motion = torch.randn(2, 128, 17, 3)
     mask = torch.ones(2, 128, 17, 1)
@@ -235,6 +265,7 @@ def main() -> None:
         "masked_ground_truth_invariant": True,
         "revision_kernel_parameters": kernel_parameters,
         "output_endpoint_projection_checked": True,
+        "sparse_context_amp_gradients_checked": True,
     }
     print(output)
 

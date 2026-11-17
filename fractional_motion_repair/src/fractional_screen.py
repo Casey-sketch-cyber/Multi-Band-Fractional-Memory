@@ -194,6 +194,21 @@ def fractional_orders(model: nn.Module) -> list[float] | None:
     return [float(value) for value in values]
 
 
+def tempering_decays(model: nn.Module) -> list[float] | None:
+    memory = getattr(getattr(model, "backbone", None), "memory", None)
+    if memory is None or memory.mode != "tempered":
+        return None
+    return memory.raw_decay.detach().square().cpu().tolist()
+
+
+def nonfinite_tensor_names(tensors) -> list[str]:
+    tensors = [(name, tensor) for name, tensor in tensors if tensor is not None]
+    if not tensors:
+        return []
+    finite = torch.stack([torch.isfinite(tensor).all() for _, tensor in tensors]).tolist()
+    return [name for (name, _), valid in zip(tensors, finite) if not valid]
+
+
 @torch.no_grad()
 def evaluate_router(
     router: nn.Module,
@@ -270,6 +285,36 @@ def train_extension(
     best_state: dict[str, torch.Tensor] | None = None
     history: list[dict[str, object]] = []
     stale_epochs = 0
+    stability: dict[str, object] = {
+        "variant": name,
+        "seed": config.seed,
+        "status": "training",
+        "first_nonfinite": None,
+        "finite_optimizer_steps": 0,
+        "best_epoch": None,
+        "minimum_amp_scale": scaler.get_scale(),
+        "masked_context_precision": "float32_or_float64",
+    }
+
+    def save_status() -> None:
+        (out_dir / f"{name}_history.json").write_text(
+            json.dumps(history, indent=2, allow_nan=False), encoding="utf-8"
+        )
+        (out_dir / f"{name}_stability.json").write_text(
+            json.dumps(stability, indent=2, allow_nan=False), encoding="utf-8"
+        )
+
+    def fail_nonfinite(stage: str, names: list[str]) -> None:
+        details = {
+            "epoch": epoch,
+            "batch": batch_index,
+            "stage": stage,
+            "tensors": names,
+            "amp_scale": scaler.get_scale(),
+        }
+        stability.update(status="failed", first_nonfinite=details)
+        save_status()
+        raise FloatingPointError(f"{name} non-finite training state: {json.dumps(details)}")
 
     for epoch in range(1, config.epochs + 1):
         if hasattr(train_loader.dataset, "set_epoch"):
@@ -279,8 +324,9 @@ def train_extension(
         total_loss = 0.0
         total_fractional = 0.0
         samples = 0
+        batch_index = 0
         started = time.perf_counter()
-        for target in train_loader:
+        for batch_index, target in enumerate(train_loader, start=1):
             target = target.to(device, non_blocking=True)
             mask = make_long_gap_train_mask(
                 len(target),
@@ -303,16 +349,38 @@ def train_extension(
                 else:
                     fractional = prediction.new_zeros(())
                 loss = base_loss + fractional_weight * fractional
+            if not torch.isfinite(loss):
+                fail_nonfinite("loss", ["loss"])
             scaler.scale(loss).backward()
             scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(long_expert.parameters(), 1.0)
+            bad_gradients = nonfinite_tensor_names(
+                (key, parameter.grad) for key, parameter in long_expert.named_parameters()
+            )
+            if bad_gradients:
+                fail_nonfinite("unscaled_gradient", bad_gradients)
+            gradient_norm = torch.nn.utils.clip_grad_norm_(long_expert.parameters(), 1.0)
+            if not torch.isfinite(gradient_norm):
+                fail_nonfinite("gradient_norm", ["total_gradient_norm"])
             scaler.step(optimizer)
             scaler.update()
+            bad_parameters = nonfinite_tensor_names(long_expert.named_parameters())
+            if bad_parameters:
+                fail_nonfinite("parameter_after_step", bad_parameters)
+            stability["finite_optimizer_steps"] += 1
+            stability["minimum_amp_scale"] = min(stability["minimum_amp_scale"], scaler.get_scale())
             total_loss += float(loss.detach()) * len(target)
             total_fractional += float(fractional.detach()) * len(target)
             samples += len(target)
 
         metrics, score = evaluate_router(router, val_loader, config, baseline)
+        if not math.isfinite(score):
+            fail_nonfinite("validation", ["val_relative_primary"])
+        bad_metrics = [
+            condition for condition in SCREEN_CONDITIONS
+            if not math.isfinite(metrics[condition]["mpjpe"])
+        ]
+        if bad_metrics:
+            fail_nonfinite("validation", bad_metrics)
         record: dict[str, object] = {
             "epoch": epoch,
             "train_loss": total_loss / max(samples, 1),
@@ -320,6 +388,7 @@ def train_extension(
             "val_relative_primary": score,
             "seconds": time.perf_counter() - started,
             "fractional_orders": fractional_orders(long_expert),
+            "tempering_decays": tempering_decays(long_expert),
             "memory_lr_multiplier": memory_lr_multiplier,
         }
         for condition in SCREEN_CONDITIONS:
@@ -329,6 +398,7 @@ def train_extension(
 
         if score < best_score - 1e-5:
             best_score = score
+            stability["best_epoch"] = epoch
             best_state = {
                 key: value.detach().cpu().clone()
                 for key, value in long_expert.state_dict().items()
@@ -336,6 +406,7 @@ def train_extension(
             stale_epochs = 0
         else:
             stale_epochs += 1
+        save_status()
         if stale_epochs >= 4:
             print(f"[{name}] early stopping at epoch {epoch}", flush=True)
             break
@@ -352,9 +423,8 @@ def train_extension(
         },
         out_dir / f"{name}_best.pt",
     )
-    (out_dir / f"{name}_history.json").write_text(
-        json.dumps(history, indent=2), encoding="utf-8"
-    )
+    stability.update(status="completed", best_val_relative_primary=best_score)
+    save_status()
     return long_expert, history
 
 

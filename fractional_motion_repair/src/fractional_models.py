@@ -165,20 +165,27 @@ def masked_bidirectional_context(
     visibility: torch.Tensor,
     coefficients: torch.Tensor,
 ) -> torch.Tensor:
-    left_numerator, left_denominator = _left_masked_average(
-        signal,
-        visibility,
-        coefficients,
-    )
-    right_numerator, right_denominator = _left_masked_average(
-        torch.flip(signal, dims=(-1,)),
-        torch.flip(visibility, dims=(-1,)),
-        coefficients,
-    )
-    numerator = left_numerator + torch.flip(right_numerator, dims=(-1,))
-    denominator = left_denominator + torch.flip(right_denominator, dims=(-1,))
-    estimate = numerator / denominator.clamp_min(1e-6)
-    return torch.where(denominator > 1e-6, estimate, signal)
+    # Sparse support makes the quotient's backward intermediates exceed float16.
+    # Keep both convolutions and their normalization in full precision under AMP.
+    with torch.autocast(device_type=signal.device.type, enabled=False):
+        if signal.dtype in {torch.float16, torch.bfloat16}:
+            signal = signal.float()
+        visibility = visibility.to(dtype=signal.dtype)
+        coefficients = coefficients.to(dtype=signal.dtype)
+        left_numerator, left_denominator = _left_masked_average(
+            signal,
+            visibility,
+            coefficients,
+        )
+        right_numerator, right_denominator = _left_masked_average(
+            torch.flip(signal, dims=(-1,)),
+            torch.flip(visibility, dims=(-1,)),
+            coefficients,
+        )
+        numerator = left_numerator + torch.flip(right_numerator, dims=(-1,))
+        denominator = left_denominator + torch.flip(right_denominator, dims=(-1,))
+        estimate = numerator / denominator.clamp_min(1e-6)
+        return torch.where(denominator > 1e-6, estimate, signal)
 
 
 def endpoint_constrained_bridge(
