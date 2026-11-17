@@ -131,8 +131,9 @@ def audit_run(original: Path, retrained: Path, fold: int, seed: int, method: str
         raise ValueError(f"Retraining did not complete with finite states in {retrained}/{variant}")
     new_bands = checkpoint_bands(new_checkpoint)
     if new_bands["beta"] is not None:
+        # CPU and CUDA exp may differ by one float32 ULP for the same raw beta.
         torch.testing.assert_close(
-            torch.tensor(new_bands["beta"]), torch.tensor(new_selected["fractional_orders"]), rtol=0, atol=0,
+            torch.tensor(new_bands["beta"]), torch.tensor(new_selected["fractional_orders"]), rtol=1e-6, atol=0,
         )
         torch.testing.assert_close(
             torch.tensor(new_bands["lambda"]), torch.tensor(new_selected["tempering_decays"]), rtol=0, atol=0,
