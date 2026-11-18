@@ -87,6 +87,70 @@ between endpoint residuals. A one-sided gap subtracts its observed endpoint
 residual. A gap with no observed endpoint uses the TCN residual directly. The
 saved variant name identifies the projection when loading a checkpoint.
 
+### Milestone B bridge ablation
+
+Train `matched_tcn,gap_router` with `raw_suite.py` for each of the five folds
+and seeds 20261201–20261203. Train `continued,K5,B3_K5` with
+`fractional_screen.py` using the corresponding base run. Store each pair
+under `runs/revision/foldF/seedS/{base,bridges}`. For example, evaluate the
+first pair and combine the complete set of 15 evaluations with these commands.
+
+```bash
+python src/bridge_ablation.py evaluate --fold 0 --seed 20261201 \
+  --raw-cache-dir data/raw60 --ignore-list data/downloads/ignore_list.txt \
+  --base-run runs/revision/fold0/seed20261201/base \
+  --bridge-run runs/revision/fold0/seed20261201/bridges \
+  --out-dir runs/revision/fold0/seed20261201/validation \
+  --aist-motion-zip data/downloads/motions.zip
+python src/bridge_ablation.py summarize --runs-dir runs/revision \
+  --out-dir results/revision
+```
+
+The evaluator uses the inner validation sequences, 128-frame windows at stride
+128, and the ten conditions and mask seeds in the frozen protocol. It records
+normalized MPJPE averaged first within each sequence and then across sequences,
+available millimeter coverage, and the total deployed parameters. The summary
+requires all 450 fold × seed × bridge × condition cells. Its printed bridge means
+give each fold, training seed, and condition equal weight.
+
+### Numerical stability and training audit
+
+The TCN uses automatic mixed precision. Visibility-weighted convolutions and
+their normalization run with autocast disabled in at least float32, retaining
+float64 inputs. This prevents overflow in the backward pass when visible kernel
+support is small. Kernel initialization, parameterization, and learning-rate
+multiplier follow the revision protocol.
+
+Each extension training step checks the loss, unscaled gradients, gradient norm,
+and updated parameters for finite values. Validation scores are also checked.
+A non-finite value stops training and records the epoch, batch, stage, affected
+tensors, and AMP scale in `VARIANT_stability.json`. Completed epochs are written
+to `VARIANT_history.json`, including per-band beta and tempering decay.
+
+Audit the original 45 training runs from their saved histories and selected
+checkpoints before retraining.
+
+```bash
+python src/bridge_stability.py --original-runs-dir runs/revision \
+  --out-dir results/revision
+```
+
+Keep the corrected runs in a separate directory. After all 45 corrected runs
+finish, add their paired records to the audit with this command.
+
+```bash
+python src/bridge_stability.py --original-runs-dir runs/revision \
+  --retrained-runs-dir runs/revision_stable_20261117 --out-dir results/revision
+```
+
+`bridge_training_stability.csv` contains one row for each fold, seed, and bridge.
+It records original and corrected checkpoint epochs, validation scores, finite
+epoch counts, checkpoint hashes, and per-band beta and lambda. The original
+first logged non-finite epoch refers to the saved epoch summaries. Original
+batch gradients were unrecorded. An original last-finite lambda is available
+when that epoch supplied the selected checkpoint. Other missing historical
+values are blank and their source is `not_recorded`.
+
 ### Additional evaluation metrics
 
 `evaluate_detailed(..., extended_metrics=True)` computes the following fields
