@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import numpy as np
+import torch
 
 import kernel_inference as inference
 import kernel_test as evaluation
@@ -183,6 +184,8 @@ def check_cell_integrity() -> None:
     bad = {**cell, "sequences": [cell["sequences"][0]] * 2}
     expect_error(ValueError, evaluation.verify_cell, bad, run, "B0", "limb24", "freeze")
     expect_error(ValueError, evaluation.verify_cell, cell, run, "B0", "limb24", "changed_freeze")
+    recorded = {**cell, "runtime": {"device_type": "cuda"}}
+    expect_error(ValueError, evaluation.verify_cell, recorded, run, "B0", "limb24", "freeze", expected_runtime={"device_type": "cpu"})
 
 
 def main() -> None:
@@ -193,6 +196,11 @@ def main() -> None:
     check_clusters()
     check_decisions()
     check_cell_integrity()
+    with patch.object(torch.cuda, "get_device_name", side_effect=AssertionError("CPU metadata must not query a CUDA device")):
+        runtime = evaluation.evaluation_runtime(torch.device("cpu"))
+        assert runtime["device_type"] == "cpu" and runtime["device_name"] == "CPU"
+        assert runtime["pytorch"] == str(torch.__version__)
+        assert runtime["default_dtype"] == "torch.float32" and runtime["autocast_enabled"] is False
     with tempfile.TemporaryDirectory(prefix="kernel-inference-", dir=args.work_dir) as temporary:
         directory = Path(temporary)
         check_grid(directory)
@@ -200,7 +208,7 @@ def main() -> None:
         check_freeze_contract(directory)
     print(json.dumps({"cluster_weighting": True, "holm_and_equivalence": True, "complete_grid": True,
                       "freeze_access_guard": True, "interrupted_test_guard": True, "sequence_mean_integrity": True,
-                      "full_freeze_hash_and_grid_guards": True, "test_set_accessed": False}), flush=True)
+                      "full_freeze_hash_and_grid_guards": True, "runtime_metadata": True, "test_set_accessed": False}), flush=True)
 
 
 if __name__ == "__main__":

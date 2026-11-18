@@ -175,6 +175,9 @@ python src/kernel_test.py evaluate --freeze runs/kernel_test/test_freeze.json \
 Run `evaluate` once for each of the 15 fold/seed pairs. The evaluator checks
 the complete freeze, all checkpoint hashes and evidence, sequence lists,
 approved B3 decision, source hashes and fixed masks before test access.
+Completed manifests record the device, PyTorch/CUDA/cuDNN versions and
+precision/determinism settings; summarization requires the same runtime
+configuration across all 15 runs.
 It uses 128-frame fixed windows, stride 128, batch size 32 and zero workers.
 Each method/condition has a saved transaction. An interrupted transaction
 or failed run stays locked for review; completed runs are verified and skipped.

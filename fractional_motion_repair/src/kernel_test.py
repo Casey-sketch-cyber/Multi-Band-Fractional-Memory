@@ -243,7 +243,23 @@ def band_columns(bands: list[dict]) -> dict:
     return fields
 
 
-def verify_cell(cell: dict, run: dict, method: str, condition: str, freeze_sha: str) -> None:
+def evaluation_runtime(device: torch.device) -> dict:
+    return {
+        "device_type": device.type,
+        "device_name": torch.cuda.get_device_name(device) if device.type == "cuda" else "CPU",
+        "pytorch": str(torch.__version__), "cuda": torch.version.cuda,
+        "cudnn": torch.backends.cudnn.version(),
+        "default_dtype": str(torch.get_default_dtype()),
+        "autocast_enabled": torch.is_autocast_enabled(device.type),
+        "matmul_allow_tf32": torch.backends.cuda.matmul.allow_tf32,
+        "cudnn_allow_tf32": torch.backends.cudnn.allow_tf32,
+        "cudnn_deterministic": torch.backends.cudnn.deterministic,
+        "cudnn_benchmark": torch.backends.cudnn.benchmark,
+        "cpu_threads": torch.get_num_threads(),
+    }
+
+
+def verify_cell(cell: dict, run: dict, method: str, condition: str, freeze_sha: str, *, expected_runtime: dict | None = None) -> None:
     if (
         cell["freeze_sha256"] != freeze_sha
         or (cell["fold"], cell["seed"]) != (run["fold"], run["seed"])
@@ -252,6 +268,8 @@ def verify_cell(cell: dict, run: dict, method: str, condition: str, freeze_sha: 
         or cell["checkpoint_sha256"] != run["methods"][method]["checkpoint"]["sha256"]
     ):
         raise ValueError("Test result provenance differs from the freeze")
+    if expected_runtime is not None and cell["runtime"] != expected_runtime:
+        raise ValueError("Completed test cell used a different runtime configuration")
     details = cell["sequences"]
     names = [row["sequence"] for row in details]
     if len(names) != len(set(names)) or set(names) != set(run["eligible_test_sequences"]):
@@ -265,10 +283,14 @@ def verify_cell(cell: dict, run: dict, method: str, condition: str, freeze_sha: 
 
 def pair_outputs(directory: Path, run: dict, freeze_sha: str) -> tuple[list[dict], list[dict], dict]:
     rows, details, files = [], [], {}
+    runtime = None
     for method, condition in product(METHODS, CONDITIONS):
         path = directory / "cells" / f"{method}-{condition}.json"
         cell = read_json(path)
         verify_cell(cell, run, method, condition, freeze_sha)
+        if runtime is not None and cell["runtime"] != runtime:
+            raise ValueError("Test runtime configuration differs within a fold and seed")
+        runtime = cell["runtime"]
         files[path.name] = digest(path)
         fields = {key: cell[key] for key in ("fold", "seed", "method", "condition", "mask_seed", "parameters", "checkpoint_sha256", "selected_epoch")}
         fields.update(band_columns(cell["kernel_bands"]))
@@ -305,6 +327,7 @@ def evaluate(args: argparse.Namespace) -> None:
             raise ValueError("Frozen test sequence order differs")
         dataset = RawWindowDataset(Path(frozen["raw_cache_dir"]), indices, 128, mode="fixed", seed=args.seed, stride=128)
         device = torch.device(args.device)
+        runtime = evaluation_runtime(device)
         loader = DataLoader(dataset, batch_size=32, shuffle=False, num_workers=0, pin_memory=device.type == "cuda")
         if frozen["aist_motion_zip"] and Path(frozen["aist_motion_zip"]["path"]).stat().st_size != frozen["aist_motion_zip"]["bytes"]:
             raise ValueError("Frozen AIST++ archive size changed")
@@ -322,7 +345,7 @@ def evaluate(args: argparse.Namespace) -> None:
             for condition, mask_seed in MASK_SEEDS.items():
                 path = directory / "cells" / f"{method}-{condition}.json"
                 if path.exists():
-                    verify_cell(read_json(path), run, method, condition, freeze_sha)
+                    verify_cell(read_json(path), run, method, condition, freeze_sha, expected_runtime=runtime)
                     continue
                 intent = path.with_suffix(".intent.json")
                 write_json(intent, {"started_at_utc": now(), "freeze_sha256": freeze_sha}, exclusive=True)
@@ -338,8 +361,9 @@ def evaluate(args: argparse.Namespace) -> None:
                     "checkpoint_sha256": record["checkpoint"]["sha256"],
                     "selected_epoch": record["selected_epoch"], "parameters": parameters,
                     "kernel_bands": bands, "metrics": metrics, "sequences": details,
+                    "runtime": runtime,
                 }
-                verify_cell(cell, run, method, condition, freeze_sha)
+                verify_cell(cell, run, method, condition, freeze_sha, expected_runtime=runtime)
                 write_json(path, cell)
                 print(f"test fold={args.fold} seed={args.seed} {method}/{condition} completed", flush=True)
             del model, expert
@@ -349,6 +373,7 @@ def evaluate(args: argparse.Namespace) -> None:
         write_json(directory / "test_manifest.json", {
             "stage": STAGE, "test_set_accessed": True, "freeze_sha256": freeze_sha,
             "fold": args.fold, "seed": args.seed, "completed_at_utc": now(),
+            "runtime": runtime,
             "cell_sha256": files, "rows": len(rows), "sequence_rows": len(details),
             "result_sha256": digest(directory / "kernel_ablation.csv"),
             "sequence_result_sha256": digest(directory / "kernel_sequence_results.csv"),
@@ -362,7 +387,7 @@ def evaluate(args: argparse.Namespace) -> None:
 def summarize(args: argparse.Namespace) -> None:
     frozen = verify_freeze(args.freeze)
     freeze_sha = digest(args.freeze)
-    rows, details = [], []
+    rows, details, runtimes = [], [], []
     for run in frozen["runs"]:
         directory = Path(frozen["test_output_dir"]) / f"fold{run['fold']}" / f"seed{run['seed']}"
         manifest = read_json(directory / "test_manifest.json")
@@ -376,6 +401,10 @@ def summarize(args: argparse.Namespace) -> None:
             raise ValueError(f"Completed test evidence changed in {directory}")
         rows.extend(pair_rows)
         details.extend(pair_details)
+        runtimes.append({"fold": run["fold"], "seed": run["seed"], **manifest["runtime"]})
+    configurations = [{key: value for key, value in runtime.items() if key not in {"fold", "seed"}} for runtime in runtimes]
+    if any(runtime != configurations[0] for runtime in configurations[1:]):
+        raise ValueError("Test runtime hardware, software, or precision settings differ across runs")
     args.out_dir.mkdir(parents=True, exist_ok=True)
     save_results(args.out_dir / "kernel_ablation.csv", rows)
     # This file stays on the experiment server and must not be committed to Git.
@@ -383,6 +412,7 @@ def summarize(args: argparse.Namespace) -> None:
     write_json(args.out_dir / "kernel_test_manifest.json", {
         "stage": STAGE, "freeze_sha256": freeze_sha, "test_set_accessed": True,
         "rows": len(rows), "sequence_rows": len(details), "created_at_utc": now(),
+        "runtime_by_run": runtimes,
         "result_sha256": digest(args.out_dir / "kernel_ablation.csv"),
         "sequence_result_sha256": digest(args.out_dir / "kernel_sequence_results.csv"),
     })
