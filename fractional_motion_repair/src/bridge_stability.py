@@ -66,8 +66,12 @@ def add_bands(row: dict, prefix: str, bands: dict) -> None:
             row[f"{prefix}_{parameter}_{band + 1}"] = "" if values is None else values[band]
 
 
-def audit_run(original: Path, retrained: Path, fold: int, seed: int, method: str, variant: str) -> dict:
-    for directory in (original, retrained):
+def audit_run(
+    original: Path, retrained: Path | None,
+    fold: int, seed: int, method: str, variant: str,
+) -> dict:
+    directories = (original,) if retrained is None else (original, retrained)
+    for directory in directories:
         manifest = read_json(directory / "screen_manifest.json")
         if (
             manifest.get("fold") != fold or manifest["config"]["seed"] != seed
@@ -76,16 +80,6 @@ def audit_run(original: Path, retrained: Path, fold: int, seed: int, method: str
             or set(manifest["variants"]) != set(VARIANTS.values())
         ):
             raise ValueError(f"Incorrect training provenance in {directory}")
-    if read_json(original / "revision_split_manifest.json") != read_json(retrained / "revision_split_manifest.json"):
-        raise ValueError("Original and retrained fold lists differ")
-    old_manifest = read_json(original / "screen_manifest.json")
-    new_manifest = read_json(retrained / "screen_manifest.json")
-    if (
-        old_manifest["config"] != new_manifest["config"]
-        or old_manifest["memory_lr_multiplier"] != new_manifest["memory_lr_multiplier"]
-    ):
-        raise ValueError("Original and retrained configurations differ")
-
     history_path = original / f"{variant}_history.json"
     checkpoint = original / f"{variant}_best.pt"
     history = read_json(history_path)
@@ -116,6 +110,18 @@ def audit_run(original: Path, retrained: Path, fold: int, seed: int, method: str
     }
     add_bands(row, "original_selected", bands)
     add_bands(row, "original_last_finite", {"beta": last_finite["fractional_orders"], "lambda": final_decay})
+    if retrained is None:
+        return row
+
+    if read_json(original / "revision_split_manifest.json") != read_json(retrained / "revision_split_manifest.json"):
+        raise ValueError("Original and retrained fold lists differ")
+    old_manifest = read_json(original / "screen_manifest.json")
+    new_manifest = read_json(retrained / "screen_manifest.json")
+    if (
+        old_manifest["config"] != new_manifest["config"]
+        or old_manifest["memory_lr_multiplier"] != new_manifest["memory_lr_multiplier"]
+    ):
+        raise ValueError("Original and retrained configurations differ")
 
     new_history_path = retrained / f"{variant}_history.json"
     new_checkpoint = retrained / f"{variant}_best.pt"
@@ -160,22 +166,28 @@ def audit_run(original: Path, retrained: Path, fold: int, seed: int, method: str
 def main() -> None:
     parser = argparse.ArgumentParser(description="Audit the original and corrected milestone B bridge training")
     parser.add_argument("--original-runs-dir", required=True, type=Path)
-    parser.add_argument("--retrained-runs-dir", required=True, type=Path)
+    parser.add_argument("--retrained-runs-dir", type=Path, help="Add the completed corrected runs to the audit")
     parser.add_argument("--out-dir", required=True, type=Path)
     args = parser.parse_args()
     rows = []
     for fold in range(5):
         for seed in TRAINING_SEEDS:
             relative = Path(f"fold{fold}") / f"seed{seed}" / "bridges"
+            retrained = None
+            if args.retrained_runs_dir is not None:
+                retrained = args.retrained_runs_dir / relative
             for method, variant in VARIANTS.items():
                 rows.append(audit_run(
-                    args.original_runs_dir / relative, args.retrained_runs_dir / relative,
+                    args.original_runs_dir / relative, retrained,
                     fold, seed, method, variant,
                 ))
     if len(rows) != 45:
-        raise ValueError("Expected 45 paired original/retrained runs")
+        raise ValueError("Expected 45 bridge training runs")
     save_results(args.out_dir / "bridge_training_stability.csv", rows)
-    print(json.dumps({"runs": len(rows), "retrained_nonfinite_events": 0}), flush=True)
+    report = {"runs": len(rows)}
+    if args.retrained_runs_dir is not None:
+        report["retrained_nonfinite_events"] = 0
+    print(json.dumps(report), flush=True)
 
 
 if __name__ == "__main__":

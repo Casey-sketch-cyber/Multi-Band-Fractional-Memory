@@ -127,8 +127,16 @@ A non-finite value stops training and records the epoch, batch, stage, affected
 tensors, and AMP scale in `VARIANT_stability.json`. Completed epochs are written
 to `VARIANT_history.json`, including per-band beta and tempering decay.
 
-Keep the original runs and corrected runs in separate directories. After all
-45 corrected training runs finish, produce the paired audit with this command.
+Audit the original 45 training runs from their saved histories and selected
+checkpoints before retraining.
+
+```bash
+python src/bridge_stability.py --original-runs-dir runs/revision \
+  --out-dir results/revision
+```
+
+Keep the corrected runs in a separate directory. After all 45 corrected runs
+finish, add their paired records to the audit with this command.
 
 ```bash
 python src/bridge_stability.py --original-runs-dir runs/revision \
