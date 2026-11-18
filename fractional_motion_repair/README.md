@@ -151,6 +151,64 @@ batch gradients were unrecorded. An original last-finite lambda is available
 when that epoch supplied the selected checkpoint. Other missing historical
 values are blank and their source is `not_recorded`.
 
+### Frozen milestone C test evaluation
+
+Claude approved B3 in PR #15. Reuse that review's 15 B0 and 15 B3_K5
+checkpoints; train B3_K0–K4, B3_K6 and B3_K7 for all five folds and
+three seeds. The commands below require the complete source directory and
+the recorded training evidence. They preserve the eight-epoch protocol.
+
+After all 105 new trainings finish, freeze the full 135-long-checkpoint grid
+and 15 short checkpoints before constructing any test dataset:
+
+```bash
+python src/kernel_test.py freeze --raw-cache-dir data/raw60 \
+  --ignore-list data/downloads/ignore_list.txt --base-runs-dir runs/revision \
+  --stable-runs-dir runs/revision_stable_20261117 \
+  --runs-dir runs/kernel_ablation_20261118 --out-dir runs/kernel_test \
+  --protocol protocols/mathematics_revision_protocol.md \
+  --decisions ../docs/DECISIONS.md --aist-motion-zip data/downloads/motions.zip
+python src/kernel_test.py evaluate --freeze runs/kernel_test/test_freeze.json \
+  --fold 0 --seed 20261201 --device cuda
+```
+
+Run `evaluate` once for each of the 15 fold/seed pairs. The evaluator checks
+the complete freeze, all checkpoint hashes and evidence, sequence lists,
+approved B3 decision, source hashes and fixed masks before test access.
+It uses 128-frame fixed windows, stride 128, batch size 32 and zero workers.
+Each method/condition has a saved transaction. An interrupted transaction
+or failed run stays locked for review; completed runs are verified and skipped.
+
+```bash
+python src/kernel_test.py summarize --freeze runs/kernel_test/test_freeze.json \
+  --out-dir runs/kernel_test/summary
+python src/kernel_inference.py --freeze runs/kernel_test/test_freeze.json \
+  --results-dir runs/kernel_test/summary --out-dir results/revision
+python src/smoke_kernel_inference.py --work-dir tmp/kernel-inference-smoke
+```
+
+`kernel_ablation.csv` has 1,350 fold/seed/method/condition rows, including total
+router parameters and each selected kernel band's mean lag, zero-lag mass,
+beta and decay where applicable. These statistics describe the normalized
+base kernel before visibility normalization, mixing and endpoint projection.
+`kernel_sequence_results.csv` and the full freeze remain on the experiment
+server. Do not commit sequence-level results, data or checkpoints.
+
+The primary score is `mpjpe_window_mean`: average windows within sequences,
+then average three training seeds, then average endpoint conditions.
+Inference samples whole genre/choreography groups uniformly with replacement,
+retaining all member sequences. All comparisons share 10,000 draws with seed
+20261114. This retains equal sequence weighting within each resample.
+`kernel_hypotheses.csv` reports raw 95% and 90% percentile intervals, bootstrap
+tail evidence with a +1 Monte Carlo correction, and Holm decisions: two H1
+comparisons and four H2 comparisons. Difference and intersection-union
+equivalence evidence receive separate four-comparison H2 corrections.
+The rank-specific critical intervals accompany those decisions; they are not
+simultaneous confidence regions. H3 uses the raw 95% lower limit and −0.5%
+margin. K0 equivalence is explicitly labelled exploratory G1 evidence.
+`kernel_ablation_summary.csv` and `kernel_inference_manifest.json` record
+aggregation and decision evidence. The author makes the G1 decision.
+
 ### Additional evaluation metrics
 
 `evaluate_detailed(..., extended_metrics=True)` computes the following fields
