@@ -322,9 +322,9 @@ P1–P3 已由 [check_kernel_claims.py](check_kernel_claims.py) 数值核对通�
 
 **措辞**：效应量和置信区间一起给；机制解释与直接结果分开写；不写"首次""显著优于"这类没有数字支撑的话。
 
-**训练预算局限草稿**（PR #15 复审，供新稿第 8 节采用）。长缺口变体最多训练 8 轮。桥实验中 B0 的 10/15 次及 B3_K5 的 14/15 次入选检查点位于第 8 轮，完整收敛状态仍待更长训练检验。此处按冻结预算报告比较结果。
+**训练预算局限草稿**（PR #15 复审，供新稿第 8 节采用）。长缺口变体最多训练 8 轮。桥实验中 B0 的 10/15 次及 B3_K5 的 14/15 次入选检查点位于第 8 轮；T4.1 使用的 K6 中也有 12/15 次选中第 8 轮。完整收敛状态仍待更长训练检验，此处按冻结预算报告比较结果。
 
-All long-gap variants used the preregistered maximum of eight training epochs. In the bridge experiment, 10 of 15 B0 runs and 14 of 15 B3_K5 runs selected their final allowed epoch. This fixed optimization budget limits conclusions about full convergence, and the effect of longer training remains unresolved.
+All long-gap variants used the preregistered maximum of eight training epochs. In the bridge experiment, 10 of 15 B0 runs and 14 of 15 B3_K5 runs selected their final allowed epoch; 12 of the 15 K6 runs used for the kernel-shape analysis also selected epoch eight. This fixed optimization budget limits conclusions about full convergence, and the effect of longer training remains unresolved.
 
 ## 10. 风险与止损
 

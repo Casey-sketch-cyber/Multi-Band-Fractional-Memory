@@ -179,6 +179,21 @@ parameter, giving parameter counts of 3, 3 and 4. Fit statuses preserve
 unavailable fits for nonpositive tap values. The fits describe kernel shape
 under the exploratory T4.1 analysis.
 
+The completed report uses all 15 selected checkpoints for each of K5 and K6:
+[shape fits](results/revision/kernel_shape_fit.csv),
+[checkpoint and analysis manifest](results/revision/kernel_shape_manifest.json),
+[PNG figure](results/revision/kernel_shapes.png) and
+[PDF figure](results/revision/kernel_shapes.pdf).
+The three mean lags, calculated per checkpoint before averaging the 15 runs,
+are 0.040/0.201/0.517 frames for K5 and 9.590/20.910/32.090 frames for K6.
+The power-law working profile has the lowest AIC for all 45 K6 band cases;
+the tempered fits select zero exponential decay and have AIC higher by 2.
+The actual K6 profiles are nonmonotone. This relative fit comparison describes
+the finite 97-tap kernels; it does not establish a power-law mechanism or
+predictive superiority. Predictive comparisons and G1 decisions remain pending
+the frozen milestone C tests.
+Twelve of the 15 K6 checkpoints selected epoch 8, the preregistered limit.
+
 Run the diagnostic regression checks on the CPU with
 `python src/smoke_fractional.py --cpu-only`.
 
