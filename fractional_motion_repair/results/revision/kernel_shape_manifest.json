@@ -1,0 +1,1228 @@
+{
+  "stage": "exploratory_kernel_shapes",
+  "checkpoint_selection": "inner_validation",
+  "test_set_accessed": false,
+  "fit_domain": "log_normalized_tap_weights",
+  "fit_equations": [
+    "a-p*log(k+1)",
+    "a-lambda*k",
+    "a-p*log(k+1)-lambda*k"
+  ],
+  "fit_constraints": "p >= 0, lambda >= 0",
+  "aic_parameters_including_variance": {
+    "power_law": 3,
+    "exponential": 3,
+    "tempered_power_law": 4
+  },
+  "plot_summary": "checkpoint mean and 10th\u201390th percentile range",
+  "checkpoints": {
+    "B3_K5": [
+      {
+        "fold": 0,
+        "seed": 20261201,
+        "method": "B3_K5",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "108f7e1a73ef362f6ce45ab7af2264f8b7d305722c5ff699fa205be02f7ff4fb",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.030282201465390464,
+            "zero_lag_mass": 0.9787403422855205,
+            "beta": 0.03301572427153587,
+            "lambda": 0.737292468547821
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.1522132485062957,
+            "zero_lag_mass": 0.9074332947949371,
+            "beta": 0.11564940959215164,
+            "lambda": 0.565191924571991
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.41523638836074683,
+            "zero_lag_mass": 0.7843448346775814,
+            "beta": 0.24507804214954376,
+            "lambda": 0.4638681709766388
+          }
+        ]
+      },
+      {
+        "fold": 0,
+        "seed": 20261202,
+        "method": "B3_K5",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "b012f57fd8a875dd42bec2ac99f4f76e9fe877c5f3a3688fdf32e30009f91079",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.035423688363154904,
+            "zero_lag_mass": 0.9762088001469513,
+            "beta": 0.033070072531700134,
+            "lambda": 0.6593618988990784
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.201720315514502,
+            "zero_lag_mass": 0.8879799889867496,
+            "beta": 0.12129713594913483,
+            "lambda": 0.4708241820335388
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.5281975100527815,
+            "zero_lag_mass": 0.7514020001365718,
+            "beta": 0.25427186489105225,
+            "lambda": 0.3929845094680786
+          }
+        ]
+      },
+      {
+        "fold": 0,
+        "seed": 20261203,
+        "method": "B3_K5",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "f7e604ab7d195e8cd5b8ac1ab3364cdd5067d69847b24c683549486dbfa4ac49",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.03904589349913541,
+            "zero_lag_mass": 0.9739395358474165,
+            "beta": 0.035819247364997864,
+            "lambda": 0.6509506702423096
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.21052396325384365,
+            "zero_lag_mass": 0.8825168651988199,
+            "beta": 0.12940318882465363,
+            "lambda": 0.4791318476200104
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.4954821571405818,
+            "zero_lag_mass": 0.756400201017668,
+            "beta": 0.2645425498485565,
+            "lambda": 0.4278196096420288
+          }
+        ]
+      },
+      {
+        "fold": 1,
+        "seed": 20261201,
+        "method": "B3_K5",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "f0f01b1277dfc1778b530368b1fdae87159fc195da8ac230a13f6ba4a98f67d5",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.055222035106873506,
+            "zero_lag_mass": 0.9657512520408368,
+            "beta": 0.04054609313607216,
+            "lambda": 0.5505678653717041
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.2662707415452704,
+            "zero_lag_mass": 0.8639396516861897,
+            "beta": 0.13310806453227997,
+            "lambda": 0.4053967297077179
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.7811262930406789,
+            "zero_lag_mass": 0.6874812519756458,
+            "beta": 0.2828270196914673,
+            "lambda": 0.30900993943214417
+          }
+        ]
+      },
+      {
+        "fold": 1,
+        "seed": 20261202,
+        "method": "B3_K5",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "0e9bc3349547e135e66fbe99dfc367dcace80a3c8dfa9f02cc584072ea6e7401",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.05287526728116292,
+            "zero_lag_mass": 0.9671163481470895,
+            "beta": 0.03906593844294548,
+            "lambda": 0.5532135963439941
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.2852924952318387,
+            "zero_lag_mass": 0.8560814448906269,
+            "beta": 0.13961650431156158,
+            "lambda": 0.3983600437641144
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.6832383674250386,
+            "zero_lag_mass": 0.705716826473304,
+            "beta": 0.28497934341430664,
+            "lambda": 0.3486131727695465
+          }
+        ]
+      },
+      {
+        "fold": 1,
+        "seed": 20261203,
+        "method": "B3_K5",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "3fbb52af478ee7b8419bea6ec0ffcf97a0324833f081b872f27af6cec2bf643d",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.050553559777100396,
+            "zero_lag_mass": 0.9681117757638539,
+            "beta": 0.038955025374889374,
+            "lambda": 0.5713011622428894
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.2568188253065967,
+            "zero_lag_mass": 0.8652941162628482,
+            "beta": 0.13706474006175995,
+            "lambda": 0.427684485912323
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.5487441981965592,
+            "zero_lag_mass": 0.7405798078844524,
+            "beta": 0.2718222439289093,
+            "lambda": 0.40236249566078186
+          }
+        ]
+      },
+      {
+        "fold": 2,
+        "seed": 20261201,
+        "method": "B3_K5",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "6efa3c564ce981087a1f8e8ff7187ae21ac3365b28723a376972d45e8af801d1",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.026756474541337276,
+            "zero_lag_mass": 0.9808461539713496,
+            "beta": 0.03131641820073128,
+            "lambda": 0.7749224901199341
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.13584333762895134,
+            "zero_lag_mass": 0.914697563602091,
+            "beta": 0.11281772702932358,
+            "lambda": 0.604588508605957
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.34467898886158327,
+            "zero_lag_mass": 0.8085286239190689,
+            "beta": 0.23617203533649445,
+            "lambda": 0.5218808054924011
+          }
+        ]
+      },
+      {
+        "fold": 2,
+        "seed": 20261202,
+        "method": "B3_K5",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "f40e13af982914303650b49c7a5cb6db39ffe9f384b1156d63fa15f91ade8fc8",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.028467834617043254,
+            "zero_lag_mass": 0.9797594682906661,
+            "beta": 0.032513704150915146,
+            "lambda": 0.7617963552474976
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.14151502396994184,
+            "zero_lag_mass": 0.9120173842973891,
+            "beta": 0.11435128003358841,
+            "lambda": 0.5922491550445557
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.3775454799575781,
+            "zero_lag_mass": 0.7974132242968363,
+            "beta": 0.23867064714431763,
+            "lambda": 0.4899066984653473
+          }
+        ]
+      },
+      {
+        "fold": 2,
+        "seed": 20261203,
+        "method": "B3_K5",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "d55ec2c23d7ded1639f68653c12ac46889f937e5296bd8f38ab6074c95d5d0ab",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.031032726713052232,
+            "zero_lag_mass": 0.9782295465738408,
+            "beta": 0.03377283737063408,
+            "lambda": 0.7363491058349609
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.17655278995334,
+            "zero_lag_mass": 0.8958352898553119,
+            "beta": 0.12472859025001526,
+            "lambda": 0.5344247221946716
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.4049004079043307,
+            "zero_lag_mass": 0.7851927522694497,
+            "beta": 0.2531265318393707,
+            "lambda": 0.48560473322868347
+          }
+        ]
+      },
+      {
+        "fold": 3,
+        "seed": 20261201,
+        "method": "B3_K5",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "460b0e4a9b9d263bb02339ff2d6e938d20f3d6fa234fadf95a57ccdb85839a5a",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.029531697161103123,
+            "zero_lag_mass": 0.9792756755296009,
+            "beta": 0.03211505711078644,
+            "lambda": 0.7359564304351807
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.1323928687658438,
+            "zero_lag_mass": 0.9167948923014876,
+            "beta": 0.10984744131565094,
+            "lambda": 0.604156494140625
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.4010464442311449,
+            "zero_lag_mass": 0.7890081422848526,
+            "beta": 0.24335326254367828,
+            "lambda": 0.4742419719696045
+          }
+        ]
+      },
+      {
+        "fold": 3,
+        "seed": 20261202,
+        "method": "B3_K5",
+        "selected_epoch": 7,
+        "checkpoint_sha256": "c2892558162a019bc69c22f7c7455390c500b430a7420cf8945873822c41a203",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.05799721643451166,
+            "zero_lag_mass": 0.9651086605372309,
+            "beta": 0.03893899917602539,
+            "lambda": 0.5136581659317017
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.2691007811968378,
+            "zero_lag_mass": 0.8624360208724295,
+            "beta": 0.13495755195617676,
+            "lambda": 0.4064732789993286
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.7000923500366308,
+            "zero_lag_mass": 0.7008130179354416,
+            "beta": 0.28888487815856934,
+            "lambda": 0.3454590439796448
+          }
+        ]
+      },
+      {
+        "fold": 3,
+        "seed": 20261203,
+        "method": "B3_K5",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "713cabe8637695ba03dcf0dbb152070573698b0539cf8c36017ed5d31089d51d",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.03493599874497422,
+            "zero_lag_mass": 0.9764127540467328,
+            "beta": 0.0332026407122612,
+            "lambda": 0.6680266857147217
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.18417407550835646,
+            "zero_lag_mass": 0.8938330287457212,
+            "beta": 0.12193753570318222,
+            "lambda": 0.5080683827400208
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.43250269497768834,
+            "zero_lag_mass": 0.776833767256563,
+            "beta": 0.25395283102989197,
+            "lambda": 0.46195289492607117
+          }
+        ]
+      },
+      {
+        "fold": 4,
+        "seed": 20261201,
+        "method": "B3_K5",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "ac9882cb33a6f78fc4c7a5384cec62f0e487b49069f1b990e090012c0fa3d56d",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.030121558397477897,
+            "zero_lag_mass": 0.978836018343973,
+            "beta": 0.03293496370315552,
+            "lambda": 0.7387903332710266
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.15047966400873442,
+            "zero_lag_mass": 0.9080851967407114,
+            "beta": 0.11577173322439194,
+            "lambda": 0.5706130266189575
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.4001410369922532,
+            "zero_lag_mass": 0.7895252800947296,
+            "beta": 0.24246208369731903,
+            "lambda": 0.47371020913124084
+          }
+        ]
+      },
+      {
+        "fold": 4,
+        "seed": 20261202,
+        "method": "B3_K5",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "09cc62cbe1ba125883894a2c1827bb84f30b7b54f8a8e86536941c7ebe7a189e",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.0329608178982748,
+            "zero_lag_mass": 0.9774257803253246,
+            "beta": 0.03288957104086876,
+            "lambda": 0.6920658349990845
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.17099490044713692,
+            "zero_lag_mass": 0.9004108230602802,
+            "beta": 0.11542989313602448,
+            "lambda": 0.5158422589302063
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.4915693897432627,
+            "zero_lag_mass": 0.7637423062977834,
+            "beta": 0.24463628232479095,
+            "lambda": 0.4039064049720764
+          }
+        ]
+      },
+      {
+        "fold": 4,
+        "seed": 20261203,
+        "method": "B3_K5",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "0d29a2f842846e8a457ccdd7a86176fd8d0d59e0b22bf6fb11858f016cbcad14",
+        "training_source_commit": "dfaa7947ee5ac1c5122e5fcb23dae70b9ce4a72f",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.06393334706863847,
+            "zero_lag_mass": 0.9633229162678464,
+            "beta": 0.03764234483242035,
+            "lambda": 0.46296316385269165
+          },
+          {
+            "band": 2,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.28856836859921225,
+            "zero_lag_mass": 0.8580096682182616,
+            "beta": 0.13237635791301727,
+            "lambda": 0.3775694966316223
+          },
+          {
+            "band": 3,
+            "mode": "tempered",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 0.7479060799559001,
+            "zero_lag_mass": 0.6928222842920161,
+            "beta": 0.2850065231323242,
+            "lambda": 0.322860449552536
+          }
+        ]
+      }
+    ],
+    "B3_K6": [
+      {
+        "fold": 0,
+        "seed": 20261201,
+        "method": "B3_K6",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "63d1bf47a5319e1c9357fab4ce077c4c526e0b276ba7d4d9a11a75e83fc55488",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 9.117084566009726,
+            "zero_lag_mass": 0.2308376584507717,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 20.032926011504006,
+            "zero_lag_mass": 0.07416254575542006,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 30.962448827985824,
+            "zero_lag_mass": 0.025432156671276133,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      },
+      {
+        "fold": 0,
+        "seed": 20261202,
+        "method": "B3_K6",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "4f8833d5095ef13003c9ae90d5a67df8544f9ae0c245ce2eac9be07b1f6c3ab1",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 9.568460905851339,
+            "zero_lag_mass": 0.2226480039840901,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 20.761548445580946,
+            "zero_lag_mass": 0.07114086627785622,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 31.974325775933988,
+            "zero_lag_mass": 0.02432498077079711,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      },
+      {
+        "fold": 0,
+        "seed": 20261203,
+        "method": "B3_K6",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "ccf7f8eee948ba525d717d00c650f321f96d4a916f9aa17841e67067470fa1e1",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 9.332358162188978,
+            "zero_lag_mass": 0.246488586441189,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 20.685268827487505,
+            "zero_lag_mass": 0.07826692456344225,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 31.94179711204562,
+            "zero_lag_mass": 0.026690656196648194,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      },
+      {
+        "fold": 1,
+        "seed": 20261201,
+        "method": "B3_K6",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "df6ee5c84a9603372f50960873af474b51e30f10cdad73fac0bffb7322ae3eaf",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 10.455268593383991,
+            "zero_lag_mass": 0.24047176303939777,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 22.089083496476256,
+            "zero_lag_mass": 0.07271176751147358,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 33.15282799566789,
+            "zero_lag_mass": 0.024296789237133992,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      },
+      {
+        "fold": 1,
+        "seed": 20261202,
+        "method": "B3_K6",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "e922484e776442a964ae7bb55c85e5236968553b91f83c91d2a436c87916a310",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 10.066548529295702,
+            "zero_lag_mass": 0.23208833262243403,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 21.588681101715714,
+            "zero_lag_mass": 0.07186837393541913,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 32.76720438353137,
+            "zero_lag_mass": 0.024042368786046295,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      },
+      {
+        "fold": 1,
+        "seed": 20261203,
+        "method": "B3_K6",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "2c65baf9b64f817870a1f1b45dd4d690ba9c2c40289151cbc53612282cb1693a",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 9.910027808994759,
+            "zero_lag_mass": 0.2348908644733934,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 21.141369008829187,
+            "zero_lag_mass": 0.07220424952421457,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 32.29491097307812,
+            "zero_lag_mass": 0.024586295643843903,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      },
+      {
+        "fold": 2,
+        "seed": 20261201,
+        "method": "B3_K6",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "a75dc29c94bf8715c1f686c03ef091fc9711e0f774b7db581d450925bf00dc84",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 9.259911647979841,
+            "zero_lag_mass": 0.21922931485994715,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 20.3719968709226,
+            "zero_lag_mass": 0.06945373682290179,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 31.61119216816804,
+            "zero_lag_mass": 0.023840460335490418,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      },
+      {
+        "fold": 2,
+        "seed": 20261202,
+        "method": "B3_K6",
+        "selected_epoch": 7,
+        "checkpoint_sha256": "ea7fa26548e63a661838edfb47bfb0a3ed043bc5630e20813f76b204243fc823",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 9.99341661338055,
+            "zero_lag_mass": 0.23528920719387414,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 21.578221711329,
+            "zero_lag_mass": 0.07311763255209186,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 32.80457611627047,
+            "zero_lag_mass": 0.024602770099826053,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      },
+      {
+        "fold": 2,
+        "seed": 20261203,
+        "method": "B3_K6",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "ed2f2ec671a507ea564c67cbfea4786c6c3e802c6698dc0d06b99058b8e7be53",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 9.033903653388759,
+            "zero_lag_mass": 0.24101862148180325,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 20.177405759979955,
+            "zero_lag_mass": 0.07609853184769222,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 31.3878257760527,
+            "zero_lag_mass": 0.02651845835232106,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      },
+      {
+        "fold": 3,
+        "seed": 20261201,
+        "method": "B3_K6",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "5e7b45f2929988f79b84225469995363a1feb1455089891202f12a03451ea2c9",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 9.277358704127519,
+            "zero_lag_mass": 0.24154335412026423,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 20.58062730618431,
+            "zero_lag_mass": 0.076499737407315,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 31.880078141114613,
+            "zero_lag_mass": 0.026116649601025842,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      },
+      {
+        "fold": 3,
+        "seed": 20261202,
+        "method": "B3_K6",
+        "selected_epoch": 7,
+        "checkpoint_sha256": "ba6f3cf8a9829db498d0c6aa3166548370c344dcd5cf8a2628c92c7300bdc719",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 10.063022764339458,
+            "zero_lag_mass": 0.25369560975482663,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 21.64185755584761,
+            "zero_lag_mass": 0.07800232517343708,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 32.74822488438707,
+            "zero_lag_mass": 0.02612539926069169,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      },
+      {
+        "fold": 3,
+        "seed": 20261203,
+        "method": "B3_K6",
+        "selected_epoch": 7,
+        "checkpoint_sha256": "815211b4c430f8dd607698c8da2837d720171019f998edb99e94468efd725bf4",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 10.159973153788606,
+            "zero_lag_mass": 0.2635986207995103,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 21.922368327051238,
+            "zero_lag_mass": 0.08246015394329341,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 33.31391487711531,
+            "zero_lag_mass": 0.0275702222653079,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      },
+      {
+        "fold": 4,
+        "seed": 20261201,
+        "method": "B3_K6",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "4483af972bc3a85b37b801a7167179242ed9c503a45ee201887ae842fd4f05cd",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 9.253468330955698,
+            "zero_lag_mass": 0.22970953046208997,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 20.52020976133731,
+            "zero_lag_mass": 0.07314663085752,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 31.764484783906095,
+            "zero_lag_mass": 0.025219388576245838,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      },
+      {
+        "fold": 4,
+        "seed": 20261202,
+        "method": "B3_K6",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "5c4ffa000ff612c4277e6f6ae0d4bf61034e3d329681835e0c99ac4de78c1a44",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 9.142302778172239,
+            "zero_lag_mass": 0.23936266916377918,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 20.31608701381124,
+            "zero_lag_mass": 0.07646089734367709,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 31.50864740431974,
+            "zero_lag_mass": 0.02626786151046028,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      },
+      {
+        "fold": 4,
+        "seed": 20261203,
+        "method": "B3_K6",
+        "selected_epoch": 8,
+        "checkpoint_sha256": "ba5d140c7c336ed03af3c877077f7e92a0c1bfa205805f1679456327616974f1",
+        "training_source_commit": "e2c89b0fffcad7535d34fa42e60d02d214d944ab",
+        "bands": [
+          {
+            "band": 1,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 9.219145604692116,
+            "zero_lag_mass": 0.24356718226755092,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 2,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 20.242687798437398,
+            "zero_lag_mass": 0.0773223938358072,
+            "beta": null,
+            "lambda": null
+          },
+          {
+            "band": 3,
+            "mode": "free",
+            "kernel_size": 97,
+            "positive_taps": 97,
+            "mean_lag_frames": 31.233682609542587,
+            "zero_lag_mass": 0.0268770442944187,
+            "beta": null,
+            "lambda": null
+          }
+        ]
+      }
+    ]
+  },
+  "analysis_source_sha256": {
+    "kernel_shapes.py": "d0231cf54d9f64fdae6b7935e7b428a366e91e6c424b07e36929236d20712369",
+    "kernel_diagnostics.py": "815099691e6285817e0438e3564da08adf48e6479ea4973852da6fd3535fb2c0"
+  }
+}

@@ -151,6 +151,52 @@ batch gradients were unrecorded. An original last-finite lambda is available
 when that epoch supplied the selected checkpoint. Other missing historical
 values are blank and their source is `not_recorded`.
 
+### Selected kernel diagnostics
+
+`kernel_diagnostics.py` exports each selected model's normalized base-kernel taps
+and per-band mean absolute lag, zero-lag mass, beta and decay where defined.
+The lag statistic is `sum(k * w[k])` in frames, before visibility normalization
+and endpoint projection.
+
+After the five-fold, three-seed K6 training finishes, generate the exploratory
+K5/K6 shapes and K6 fits from the validation-selected checkpoints.
+
+```bash
+python src/kernel_shapes.py --runs-dir runs/kernel_ablation_20261118 \
+  --stable-runs-dir runs/revision_stable_20261117 --out-dir results/revision
+```
+
+The command checks the training manifests, selected epochs and checkpoint
+hashes. It writes `kernel_shape_fit.csv`, `kernel_shapes.png`,
+`kernel_shapes.pdf` and `kernel_shape_manifest.json`. The figure shows checkpoint
+means and the 10th–90th percentile range across fold–seed pairs. `--preview`
+uses the currently completed K6 runs and marks the filenames and manifest.
+
+Each K6 band is fit on log tap values with a free intercept using power-law,
+exponential and tempered-power-law profiles, with nonnegative decay slopes.
+AIC uses the Gaussian log-residual working model and includes the variance
+parameter, giving parameter counts of 3, 3 and 4. Fit statuses preserve
+unavailable fits for nonpositive tap values. The fits describe kernel shape
+under the exploratory T4.1 analysis.
+
+The completed report uses all 15 selected checkpoints for each of K5 and K6:
+[shape fits](results/revision/kernel_shape_fit.csv),
+[checkpoint and analysis manifest](results/revision/kernel_shape_manifest.json),
+[PNG figure](results/revision/kernel_shapes.png) and
+[PDF figure](results/revision/kernel_shapes.pdf).
+The three mean lags, calculated per checkpoint before averaging the 15 runs,
+are 0.040/0.201/0.517 frames for K5 and 9.590/20.910/32.090 frames for K6.
+The power-law working profile has the lowest AIC for all 45 K6 band cases;
+the tempered fits select zero exponential decay and have AIC higher by 2.
+The actual K6 profiles are nonmonotone. This relative fit comparison describes
+the finite 97-tap kernels; it does not establish a power-law mechanism or
+predictive superiority. Predictive comparisons and G1 decisions remain pending
+the frozen milestone C tests.
+Twelve of the 15 K6 checkpoints selected epoch 8, the preregistered limit.
+
+Run the diagnostic regression checks on the CPU with
+`python src/smoke_fractional.py --cpu-only`.
+
 ### Additional evaluation metrics
 
 `evaluate_detailed(..., extended_metrics=True)` computes the following fields

@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import argparse
+
+import numpy as np
 import torch
 
 from fractional_models import (
@@ -12,12 +15,14 @@ from fractional_models import (
     validate_fractional_definition,
 )
 from fractional_screen import KERNEL_VARIANTS, build_long_expert
+from kernel_diagnostics import kernel_statistics
+from kernel_shapes import fit_kernel_shapes
 from pilot import GapAdaptiveResidualCompletion, TemporalConvNet, linear_interpolate, parameter_count
 
 
-def check_sparse_context_gradients() -> None:
+def check_sparse_context_gradients(*, include_cuda: bool = True) -> None:
     devices = [torch.device("cpu")]
-    if torch.cuda.is_available():
+    if include_cuda and torch.cuda.is_available():
         devices.append(torch.device("cuda"))
     for device in devices:
         for visible_frame in (None, 7, 77):
@@ -91,6 +96,39 @@ def check_revision_kernels(base: TemporalConvNet, motion: torch.Tensor, mask: to
         adapter = backbone.memory
         parameter_counts[name] = parameter_count(expert)
         with torch.no_grad():
+            statistics = kernel_statistics(expert)
+            measured_lags = torch.tensor(
+                [record["mean_lag_frames"] for record in statistics], dtype=torch.float64
+            )
+            if name in {"K0", "K1", "K2"}:
+                expected = {"K0": [0], "K1": [4, 16, 48], "K2": [25, 32, 48]}[name]
+                torch.testing.assert_close(
+                    measured_lags, torch.tensor(expected, dtype=torch.float64), rtol=0, atol=1e-12
+                )
+            if name in {"K3", "K4", "K6"}:
+                torch.testing.assert_close(measured_lags, fixed_mean_lags, rtol=1e-6, atol=1e-6)
+            if name in {"K5", "K7"}:
+                original_beta = adapter.raw_beta.clone()
+                original_decay = adapter.raw_decay.clone()
+                adapter.raw_beta.zero_()
+                adapter.raw_decay.zero_()
+                uniform = kernel_statistics(expert)
+                if any(abs(record["mean_lag_frames"] - 48) > 1e-10 for record in uniform):
+                    raise RuntimeError("Selected-kernel statistics missed the uniform limit")
+                adapter.raw_decay.fill_(10)
+                concentrated = kernel_statistics(expert)
+                if any(record["mean_lag_frames"] > 1e-6 for record in concentrated):
+                    raise RuntimeError("Selected-kernel statistics missed learned tempering")
+                adapter.raw_beta.copy_(original_beta)
+                adapter.raw_decay.copy_(original_decay)
+            if name == "K6":
+                original_logits = adapter.kernel_logits.clone()
+                adapter.kernel_logits.fill_(-100)
+                adapter.kernel_logits[:, 7] = 100
+                concentrated = kernel_statistics(expert)
+                if any(abs(record["mean_lag_frames"] - 7) > 1e-10 for record in concentrated):
+                    raise RuntimeError("Selected-kernel statistics missed learned free weights")
+                adapter.kernel_logits.copy_(original_logits)
             if name in {"K1", "K2"}:
                 windows = (9, 33, 97) if name == "K1" else (51, 65, 97)
                 if adapter.finite_windows != windows:
@@ -133,7 +171,39 @@ def check_revision_kernels(base: TemporalConvNet, motion: torch.Tensor, mask: to
             for parameter in learned
         ):
             raise RuntimeError(f"Missing, zero or non-finite {name} kernel gradient")
+    double_expert, _ = build_long_expert("B3_K4")
+    double_expert.double()
+    double_lags = torch.tensor(
+        [record["mean_lag_frames"] for record in kernel_statistics(double_expert)],
+        dtype=torch.float64,
+    )
+    torch.testing.assert_close(double_lags, fixed_mean_lags, rtol=0, atol=1e-10)
     return parameter_counts
+
+
+def check_kernel_shape_fits() -> None:
+    lags = np.arange(97, dtype=np.float64)
+    design = np.column_stack((np.ones(97), np.log1p(lags), lags))
+    noise = np.cos(lags)
+    noise -= design @ np.linalg.lstsq(design, noise, rcond=None)[0]
+    for expected, power, decay in (
+        ("power_law", 0.7, 0),
+        ("exponential", 0, 0.08),
+        ("tempered_power_law", 0.7, 0.04),
+    ):
+        weights = np.exp(-power * np.log1p(lags) - decay * lags + 0.01 * noise)
+        weights /= weights.sum()
+        fits = fit_kernel_shapes(weights)
+        best = min(fits, key=lambda record: record["aic"])
+        if best["family"] != expected:
+            raise RuntimeError(f"Kernel shape fitting failed to recover {expected}")
+        np.testing.assert_allclose(
+            [best["power_exponent"], best["exponential_decay"]], [power, decay], rtol=0, atol=1e-10
+        )
+    invalid = np.zeros(97)
+    invalid[0] = 1
+    if any(record["aic"] is not None for record in fit_kernel_shapes(invalid)):
+        raise RuntimeError("Nonpositive tap weights require an explicit unavailable-fit status")
 
 
 def check_output_projection() -> None:
@@ -194,8 +264,12 @@ def check_output_projection() -> None:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--cpu-only", action="store_true", help="Run the diagnostic checks on the CPU")
+    args = parser.parse_args()
     validate_fractional_definition()
-    check_sparse_context_gradients()
+    check_sparse_context_gradients(include_cuda=not args.cpu_only)
+    check_kernel_shape_fits()
     torch.manual_seed(7)
     motion = torch.randn(2, 128, 17, 3)
     mask = torch.ones(2, 128, 17, 1)
@@ -266,6 +340,9 @@ def main() -> None:
         "revision_kernel_parameters": kernel_parameters,
         "output_endpoint_projection_checked": True,
         "sparse_context_amp_gradients_checked": True,
+        "kernel_statistics_checked": True,
+        "kernel_shape_fits_checked": True,
+        "cuda_sparse_context_checked": not args.cpu_only and torch.cuda.is_available(),
     }
     print(output)
 
