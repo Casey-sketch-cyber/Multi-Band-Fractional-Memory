@@ -2,6 +2,7 @@
 
 - 起草：Claude，2026-11-25。依据：作者决定论文图由 Codex 画，Claude 审查。正文由 Gemini 按 [WRITING_BRIEF.md](WRITING_BRIEF.md) 写，图号以本文件为准。
 - **优先级：里程碑 D、E 的实验优先于作图。** 作图不占 GPU 的任务可以在训练间隙做。
+- **规范来源**：作者的论文写作技能 `research-paper-story-writing` 第 6 节"Figures"（基于彭思达老师的论文写作模板和 FigGenie）。Codex 的环境里没有这份技能，所以下面第 1 节把其中的作图要求完整抄录过来；两者冲突时以那份技能为准，并在 PR 里指出。
 
 ## 0. 工作方式
 
@@ -12,11 +13,14 @@
 
 ## 1. 风格规范（作者要求）
 
-- **框架图和示意图（F1、F2、F3）**：参照 CVPR/ECCV 论文 Figure 1 的做法。用 [FigGenie](https://github.com/Sleepy-Avacado/FigGenie-paper-diagram-skill) 手写 SVG（以 pt 为单位），运行它的 `check.py` 直到 0 错误，再导出 PDF（`embed_fonts.py`、`export_pdf.py`）和可编辑的 PowerPoint 副本（`svg2pptx.py`，去掉继承的主题阴影）。没有 FigGenie 时直接在 PowerPoint 里用原生形状、文本框和箭头画，`.pptx` 源文件提交进仓库。**不要用 matplotlib 或 Mermaid 画框架图。**
+- **框架图和示意图（F1、F2、F3）**：参照 CVPR/ECCV 论文 Figure 1 的做法。用 [FigGenie](https://github.com/Sleepy-Avacado/FigGenie-paper-diagram-skill)（MIT）按它的完整流程做：先写 brief，再写 spec，收集目标期刊和顶会的 Figure 1 范例（exemplars），然后手写 SVG（以 pt 为单位），运行 `check.py` 直到 lint 报 0 错误，并亲眼看过渲染出的 PNG；再导出 PDF（`embed_fonts.py`、`export_pdf.py`）和可编辑的 PowerPoint 副本（`svg2pptx.py`，去掉继承的主题阴影）。**范例图和它附带的部件都剪自别人的论文，只能参考，绝不能贴进我们的图里。** brief 和 spec 随 PR 一起提交。没有 FigGenie 时直接在 PowerPoint 里用原生形状、文本框和箭头画，`.pptx` 源文件提交进仓库。**不要用 matplotlib 或 Mermaid 画框架图。**
 - **框架图几乎不放文字和数字**：只有图形、骨架小图和 2–3 个词的模块名，不写解释句，不写数值。框架图是用来突出新意的，不是让读者看懂的，理解靠正文。新的部分（核特征带、端点投影）用强调色，其余用白和灰。
 - **配色**：参照近年 CVPR/ECCV 论文图的配色，低饱和、协调；全文所有图用同一套色板。方法色固定：CT 灰色，ECB-TGL 用强调色，其余核用同一色系的不同明度，K0 用中性色。红绿对比要同时配勾叉或形状区分。
+- **F1 要最先定稿**：按技能的流程，Figure 1 的草图应在写引言之前出来，它决定正文怎么讲。F1 的草稿先单独开 PR，Gemini 写第 1、4、5 节时以它为准。
+- **图注**：写清设置、实验协议和记号，最多一句结果；不在图注里重复讨论。数字写在图注和正文里，不写在框架图上。
 - **数据图（F4–F8）**：用 matplotlib 或同类绘图库，色板与框架图一致；无衬线字体；印刷字号正文 6.5 pt，最多三种字号，不小于 6 pt；坐标轴写明单位和方向（例如 "MPJPE gain over CT (%) ↑"）；误差线或区间要在图注里说明是什么区间。
 - **尺寸**：在 MDPI 模板里量 `\linewidth`，按最终尺寸出图，不靠 LaTeX 缩放。通栏图用 MDPI 的 `adjustwidth` 环境，宽度同样实测。
+- **表格**（由 Gemini 排版，Codex 出数据时按此准备）：表题在表上方；booktabs 三线表，不用竖线；表头写明指标方向和单位；小数位一致；一张表只说一件事，关键数字轻度突出。
 
 ## 2. 图清单
 
