@@ -1,0 +1,36 @@
+{
+  "stage": "milestone_C_confirmatory_inference",
+  "author_G1_decision_required": true,
+  "freeze_sha256": "bfae4b572501c6fd588993c6069ffa292db03bd40c51138afe6a06057972a010",
+  "sequence_result_sha256": "453042029aabf743e38e43ac168b4a778ec1cfa63612e967541a6431a0ac20ea",
+  "sequences": 1363,
+  "choreography_groups": 197,
+  "outer_fold_sequences": {
+    "0": 273,
+    "1": 310,
+    "2": 213,
+    "3": 295,
+    "4": 272
+  },
+  "bootstrap_unit": "pooled genre+choreography groups, sampled uniformly with replacement; all member sequences retained",
+  "bootstrap_repetitions": 10000,
+  "bootstrap_seed": 20261114,
+  "shared_bootstrap_draws_for_all_comparisons": true,
+  "p_value_definition": "percentile-bootstrap tail inversion with +1 finite-Monte-Carlo correction",
+  "multiplicity": "Holm H1 family=2; H2 family=4, applied separately to two-sided difference and intersection-union equivalence p values",
+  "stepdown_interval_interpretation": "Rank-specific critical percentile intervals accompany Holm decisions; they are not simultaneous confidence regions. Unadjusted 95% and 90% intervals are also reported.",
+  "equivalence": "TOST-style percentile tails; both raw 90% and Holm-adjusted equivalence intervals reported",
+  "H1_positive_both_endpoints": true,
+  "H2a_better_or_equivalent_both_endpoints": true,
+  "H3_noninferior_W": true,
+  "K0_equivalent_both_endpoints_exploratory": false,
+  "G1_evidence": {
+    "S1_rule_satisfied": true,
+    "S3_kernel_equivalence_rule_satisfied": false,
+    "H1_failure_stop_required": false
+  },
+  "source_sha256": {
+    "kernel_inference.py": "f42c1bfd9f8c549fb129214a6fcfb33d94c7a0a34cb6e2856f35785c631e8d9e",
+    "kernel_test.py": "74963a674cfbd7a1f0d459f0d91b9cdb472299f52458101969b5905ab29dbd84"
+  }
+}
