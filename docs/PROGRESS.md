@@ -46,6 +46,7 @@
   - **Gemini**：按 [写作任务书](revision/WRITING_BRIEF.md) 第 8 节的顺序 W1→W7 写论文，一个任务一个 PR。依赖里程碑 D、E 的地方先写 `\todo{}`。
   - **Claude**：审查合并所有 PR，核对数学命题和每个数字的出处。
   - 原"并行通道"里的 T1.1、T1.2、T5.1 分别并入写作任务 W2、作图 F2、写作任务 W1。
+- **F1 框架图初稿已完成，待 Claude 审查。** [图注与源文件](../fractional_motion_repair/figures/f1/)、[矢量 PDF](../submission_mathematics/figures/figure1_ecb_tgl.pdf)和[可编辑 PowerPoint](../submission_mathematics/figures/figure1_ecb_tgl.pptx)已备齐。FigGenie 检查无错误，已核对通栏尺寸、嵌入字体和预览。
 - **汇总口径提醒**：协议第 7 节的序列级 MPJPE 先对各序列的窗口取均值，再对训练种子取均值。此次正式测试的毫米误差覆盖 411/1,363 条序列。
 
 ## 已知条件

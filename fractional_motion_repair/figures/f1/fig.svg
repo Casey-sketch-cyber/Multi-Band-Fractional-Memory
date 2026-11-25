@@ -1,0 +1,178 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="523.559pt" height="150pt" viewBox="0 0 523.559 150"
+     font-family="Arimo, 'Liberation Sans', Arial, Helvetica, sans-serif" font-size="6.5"
+     data-spec="ecb-tgl-fig1" data-spec-version="1" fill="#27333d">
+  <title>Endpoint-constrained kernel bridge for skeletal motion imputation</title>
+  <desc>A masked pose sequence is linearly interpolated. Parallel temporal convolutional experts join at a duration router. The long-gap expert uses tempered kernel bands and endpoint constraints.</desc>
+  <defs>
+    <marker id="main-arrow" viewBox="0 0 5 5" markerWidth="5" markerHeight="5"
+            refX="4.6" refY="2.5" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0 0 L5 2.5 L0 5 Z" fill="#56636d"/>
+    </marker>
+    <marker id="branch-arrow" viewBox="0 0 5 5" markerWidth="4" markerHeight="4"
+            refX="4.6" refY="2.5" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M0 0 L5 2.5 L0 5 Z" fill="#6c7680"/>
+    </marker>
+  </defs>
+
+  <g id="n:masked-poses" data-kind="node">
+    <rect x="4" y="15" width="58" height="78" rx="3" fill="#ffffff"/>
+    <rect x="24" y="25" width="19" height="45" rx="2.1" fill="#edf0f1"/>
+    <g fill="none" stroke="#485660" stroke-width="0.94" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="14.1" cy="33.3" r="2.15" fill="#ffffff"/>
+      <path d="M14.2 35.6 L14.5 39.2 L14 50.2 M10.5 39.1 L18 39.3
+               M10.5 39.1 L7.6 44.4 L5.3 47.5 M18 39.3 L20.7 43.1 L22.1 40.9
+               M10.9 50.2 L17.1 50.1 M10.9 50.2 L8.2 56.2 L6.8 62 L8.4 62.7
+               M17.1 50.1 L19.5 55 L18.8 60.5 L21.2 61.5"/>
+      <circle cx="33.8" cy="32.9" r="2.15" fill="#edf0f1"/>
+      <path d="M33.8 35.1 L33.5 38.9 L34.3 49.7 M29.8 39.4 L37.3 38.6
+               M29.8 39.4 L27.9 44.2 L29.4 48.3
+               M31.2 49.9 L37.4 49.6 M31.2 49.9 L29.7 55.3 L26.6 60.2 L28.2 61.2
+               M37.4 49.6 L39.6 55.9 L39.5 62.5 L41.3 62.8"/>
+      <circle cx="53.2" cy="33.5" r="2.15" fill="#ffffff"/>
+      <path d="M53.1 35.8 L52.4 39.4 L51.2 49.8 M48.7 38.8 L56.4 39.6
+               M48.7 38.8 L46.5 44.1 L44.8 43 M56.4 39.6 L59 35.1 L60.9 32.2
+               M48.4 49.7 L54.6 49.9 M48.4 49.7 L46.4 55.1 L47 61.5 L48.9 62
+               M54.6 49.9 L57.6 54.7 L59.1 60.9 L60.9 61.5"/>
+    </g>
+    <path d="M10 68 H19 M29 68 H38 M48 68 H57" fill="none" stroke="#a3adb4"
+          stroke-width="0.65" stroke-linecap="round"/>
+    <text x="33" y="82.5" text-anchor="middle">Masked poses</text>
+  </g>
+
+  <g id="n:linear-interpolation" data-kind="node">
+    <rect x="72" y="15" width="51" height="78" rx="3" fill="#f3f5f6" stroke="#d2d9dd" stroke-width="0.55"/>
+    <rect x="86" y="34" width="23" height="29" rx="1.2" fill="#e6eaed"/>
+    <g fill="none" stroke-width="0.84" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M79 58 L82 54 L86 53 M109 40 L113 37 L116 38" stroke="#66747f"/>
+      <path d="M86 53 L109 40" stroke="#3c4954"/>
+    </g>
+    <circle cx="86" cy="53" r="1.45" fill="#3c4954"/>
+    <circle cx="109" cy="40" r="1.45" fill="#3c4954"/>
+    <text x="97.5" y="77.5" text-anchor="middle">Linear</text>
+    <text x="97.5" y="85.6" text-anchor="middle">interpolation</text>
+  </g>
+
+  <g id="n:tempered-kernel-bands" data-kind="node">
+    <rect x="133" y="15" width="62" height="78" rx="3" fill="#e3f0ee" stroke="#7daaa8" stroke-width="0.64"/>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M143 36 H185 M143 51 H185 M143 66 H185" stroke="#9ab8b6" stroke-width="0.55"/>
+      <path d="M146 36 V25 M151.5 36 V31.2 M157 36 V33.5 M162.5 36 V34.9 M168 36 V35.5 M173.5 36 V35.7 M179 36 V35.8 M184.5 36 V35.9"
+            stroke="#216d72" stroke-width="1.35"/>
+      <path d="M146 51 V40 M151.5 51 V43.5 M157 51 V46 M162.5 51 V47.8
+               M168 51 V49 M173.5 51 V49.8 M179 51 V50.4 M184.5 51 V50.7"
+            stroke="#437f82" stroke-width="1.35"/>
+      <path d="M146 66 V55 M151.5 66 V57.2 M157 66 V59.1 M162.5 66 V60.6
+               M168 66 V62 M173.5 66 V63 M179 66 V63.8 M184.5 66 V64.4"
+            stroke="#589698" stroke-width="1.35"/>
+    </g>
+    <text x="164" y="77.5" text-anchor="middle" font-weight="bold" fill="#134e53">Tempered</text>
+    <text x="164" y="85.6" text-anchor="middle" font-weight="bold" fill="#134e53">kernel bands</text>
+  </g>
+
+  <g id="n:input-endpoint-bridge" data-kind="node">
+    <rect x="205" y="15" width="59" height="78" rx="3" fill="#f3f5f6" stroke="#d2d9dd" stroke-width="0.55"/>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M213 58 H256" stroke="#a8b2b9" stroke-width="0.59"/>
+      <path d="M217.5 58 C224 58 225 42 232 41 C237 40 240 52 244 54 C246.2 56 249.2 58 251.5 58"
+            stroke="#52626e" stroke-width="1.03"/>
+    </g>
+    <circle cx="217.5" cy="58" r="1.55" fill="#52626e"/>
+    <circle cx="251.5" cy="58" r="1.55" fill="#52626e"/>
+    <text x="234.5" y="77.5" text-anchor="middle">Input endpoint</text>
+    <text x="234.5" y="85.6" text-anchor="middle">bridge</text>
+  </g>
+
+  <g id="n:long-gap-tcn" data-kind="node">
+    <rect x="274" y="15" width="49" height="78" rx="3" fill="#f3f5f6" stroke="#d2d9dd" stroke-width="0.55"/>
+    <g fill="none" stroke="#6c7680" stroke-width="0.59" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M283.5 58 L295.5 49 M289.5 58 L295.5 49 M295.5 58 L295.5 49
+               M295.5 58 L307.5 49 M301.5 58 L307.5 49 M313.5 58 L307.5 49
+               M295.5 49 L301.5 39 M307.5 49 L301.5 39"/>
+    </g>
+    <g fill="#596771">
+      <circle cx="283.5" cy="58" r="1.35"/><circle cx="289.5" cy="58" r="1.35"/>
+      <circle cx="295.5" cy="58" r="1.35"/><circle cx="301.5" cy="58" r="1.35"/>
+      <circle cx="307.5" cy="58" r="1.35"/><circle cx="313.5" cy="58" r="1.35"/>
+      <circle cx="295.5" cy="49" r="1.45"/><circle cx="307.5" cy="49" r="1.45"/>
+      <circle cx="301.5" cy="39" r="1.6"/>
+    </g>
+    <text x="298.5" y="82.5" text-anchor="middle">Long-gap TCN</text>
+  </g>
+
+  <g id="n:output-endpoint-projection" data-kind="node">
+    <rect x="333" y="15" width="65" height="78" rx="3" fill="#e3f0ee" stroke="#7daaa8" stroke-width="0.64"/>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M342 56 H389 M347 36 V64 M384 36 V64" stroke="#96b4b2" stroke-width="0.55"/>
+      <path d="M347 45 C353 41.51 357 32.19 363 33.70 C369 35.22 373 47.89 378 45.49 C380.5 44.78 382 43.46 384 42"
+            stroke="#687780" stroke-width="0.82" stroke-dasharray="2 2"/>
+      <path d="M347 56 C353 53 357 44 363 46 C369 48 373 61 378 59 C380.5 58.5 382 57.3 384 56"
+            stroke="#216d72" stroke-width="1.32"/>
+    </g>
+    <circle cx="347" cy="56" r="1.55" fill="#216d72"/>
+    <circle cx="384" cy="56" r="1.55" fill="#216d72"/>
+    <text x="365.5" y="77.5" text-anchor="middle" font-weight="bold" fill="#134e53">Output endpoint</text>
+    <text x="365.5" y="85.6" text-anchor="middle" font-weight="bold" fill="#134e53">projection</text>
+  </g>
+
+  <g id="n:short-gap-tcn" data-kind="node">
+    <rect x="266" y="108" width="65" height="27" rx="3" fill="#f3f5f6" stroke="#d2d9dd" stroke-width="0.55"/>
+    <g fill="none" stroke="#6c7680" stroke-width="0.65" stroke-linecap="round">
+      <path d="M290.5 121 L294.5 113 L298.5 121 M294.5 113 L306.5 121 M298.5 121 L302.5 113 L306.5 121"/>
+    </g>
+    <g fill="#596771">
+      <circle cx="290.5" cy="121" r="1.25"/><circle cx="298.5" cy="121" r="1.25"/><circle cx="306.5" cy="121" r="1.25"/>
+      <circle cx="294.5" cy="113" r="1.35"/><circle cx="302.5" cy="113" r="1.35"/>
+    </g>
+    <text x="298.5" y="130.3" text-anchor="middle">Short-gap TCN</text>
+  </g>
+
+  <g id="n:duration-routing" data-kind="node">
+    <rect x="408" y="15" width="42" height="78" rx="3" fill="#f3f5f6" stroke="#d2d9dd" stroke-width="0.55"/>
+    <path d="M416 39 H420 C426 39 427.5 48.9 431 49.5 H442
+             M416 60 H420 C426 60 427.5 50.1 431 49.5"
+          fill="none" stroke="#64727c" stroke-width="0.99" stroke-linecap="round"/>
+    <circle cx="431" cy="49.5" r="1.9" fill="#f3f5f6" stroke="#64727c" stroke-width="0.8"/>
+    <text x="429" y="77.5" text-anchor="middle">Duration</text>
+    <text x="429" y="85.6" text-anchor="middle">routing</text>
+  </g>
+
+  <g id="n:completed-poses" data-kind="node">
+    <rect x="460" y="15" width="58" height="78" rx="3" fill="#ffffff"/>
+    <rect x="480" y="25" width="19" height="45" rx="2.1" fill="#edf0f1"/>
+    <g fill="none" stroke="#485660" stroke-width="0.94" stroke-linecap="round" stroke-linejoin="round"
+       transform="translate(456 0)">
+      <circle cx="14.1" cy="33.3" r="2.15" fill="#ffffff"/>
+      <path d="M14.2 35.6 L14.5 39.2 L14 50.2 M10.5 39.1 L18 39.3
+               M10.5 39.1 L7.6 44.4 L5.3 47.5 M18 39.3 L20.7 43.1 L22.1 40.9
+               M10.9 50.2 L17.1 50.1 M10.9 50.2 L8.2 56.2 L6.8 62 L8.4 62.7
+               M17.1 50.1 L19.5 55 L18.8 60.5 L21.2 61.5"/>
+      <circle cx="33.8" cy="32.9" r="2.15" fill="#edf0f1"/>
+      <path d="M33.8 35.1 L33.5 38.9 L34.3 49.7 M29.8 39.4 L37.3 38.6
+               M29.8 39.4 L27.9 44.2 L29.4 48.3 M37.3 38.6 L41.1 37.2 L42.7 32.8
+               M31.2 49.9 L37.4 49.6 M31.2 49.9 L29.7 55.3 L26.6 60.2 L28.2 61.2
+               M37.4 49.6 L39.6 55.9 L39.5 62.5 L41.3 62.8"/>
+      <circle cx="53.2" cy="33.5" r="2.15" fill="#ffffff"/>
+      <path d="M53.1 35.8 L52.4 39.4 L51.2 49.8 M48.7 38.8 L56.4 39.6
+               M48.7 38.8 L46.5 44.1 L44.8 43 M56.4 39.6 L59 35.1 L60.9 32.2
+               M48.4 49.7 L54.6 49.9 M48.4 49.7 L46.4 55.1 L47 61.5 L48.9 62
+               M54.6 49.9 L57.6 54.7 L59.1 60.9 L60.9 61.5"/>
+    </g>
+    <path d="M466 68 H475 M485 68 H494 M504 68 H513" fill="none" stroke="#a3adb4"
+          stroke-width="0.65" stroke-linecap="round"/>
+    <text x="489" y="82.5" text-anchor="middle">Completed poses</text>
+  </g>
+
+  <g fill="none" stroke="#56636d" stroke-width="0.8" stroke-linejoin="round">
+    <g id="e:observed-to-linear" data-from="masked-poses" data-to="linear-interpolation"><path d="M63 51 H71" marker-end="url(#main-arrow)"/></g>
+    <g id="e:linear-to-bands" data-from="linear-interpolation" data-to="tempered-kernel-bands"><path d="M124 51 H132" marker-end="url(#main-arrow)"/></g>
+    <g id="e:bands-to-bridge" data-from="tempered-kernel-bands" data-to="input-endpoint-bridge"><path d="M196 51 H204" marker-end="url(#main-arrow)"/></g>
+    <g id="e:bridge-to-long" data-from="input-endpoint-bridge" data-to="long-gap-tcn"><path d="M265 51 H273" marker-end="url(#main-arrow)"/></g>
+    <g id="e:long-to-projection" data-from="long-gap-tcn" data-to="output-endpoint-projection"><path d="M324 51 H332" marker-end="url(#main-arrow)"/></g>
+    <g id="e:projection-to-router" data-from="output-endpoint-projection" data-to="duration-routing"><path d="M399 51 H407" marker-end="url(#main-arrow)"/></g>
+    <g id="e:router-to-completed" data-from="duration-routing" data-to="completed-poses"><path d="M451 51 H459" marker-end="url(#main-arrow)"/></g>
+  </g>
+  <g fill="none" stroke="#6c7680" stroke-width="0.64" stroke-linejoin="round">
+    <g id="e:linear-to-short" data-from="linear-interpolation" data-to="short-gap-tcn"><path d="M97.5 94 V121.5 H265" marker-end="url(#branch-arrow)"/></g>
+    <g id="e:short-to-router" data-from="short-gap-tcn" data-to="duration-routing"><path d="M332 121.5 H429 V94" marker-end="url(#branch-arrow)"/></g>
+  </g>
+</svg>
