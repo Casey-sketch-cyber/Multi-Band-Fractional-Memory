@@ -65,6 +65,11 @@
 
 ## 工作记录
 
+### 2026-11-25 · claude · claude/figure-brief-skill-alignment
+
+- **完成**：按作者的 `research-paper-story-writing` 技能第 6 节逐条对照作图任务书，补上三处遗漏：FigGenie 的 brief → spec → 范例 → SVG 完整流程和"范例部件不得贴入"；F1 最先定稿；图注和表格规范。注明规范来源，Codex 环境里没有这份技能，所以要求已抄录进任务书。
+
+
 ### 2026-11-25 · claude · claude/g1-s1-roles
 
 - **完成**：记录 G1（S1 线）和作者定的分工。写出 `docs/revision/WRITING_BRIEF.md`（给 Gemini：格式、故事、术语表、命题 P1–P4 与新增 P6、各节要点、已有数字、交付格式、任务顺序 W1–W7、自审清单）和 `docs/revision/FIGURE_BRIEF.md`（给 Codex：工作方式、按作者要求的风格规范、F1–F8 图清单与数据来源、审查要点）。`AGENTS.md` 加第 8 条分工。
