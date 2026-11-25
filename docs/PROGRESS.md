@@ -40,9 +40,13 @@
 - **T4.1 完整核形态结果已生成（2026-11-18）**：K5/K6 各 15 组检查点，含 [135 行拟合表](../fractional_motion_repair/results/revision/kernel_shape_fit.csv)、[核形态图](../fractional_motion_repair/results/revision/kernel_shapes.png)和来源清单。K5 三带平均滞后为 0.040/0.201/0.517 帧，K6 为 9.590/20.910/32.090 帧，均先逐检查点计算再平均。有限核拟合只作探索分析，G1 仍依冻结测试判据。[PR #17](https://github.com/Casey-sketch-cyber/Multi-Band-Fractional-Memory/pull/17) 已审查并合并。
   - **解读边界（Claude 2026-11-23 审查）：学到的核形状不能当作"动作数据本身有多长记忆"的证据。** K6 的初值就是 K3 的 GL 幂律权重，8 轮训练后仍贴近幂律形状，所以幂律拟合在 45/45 个带上 AIC 最低主要是初始化的延续。K5 和 K6 的平均滞后相差两个数量级（约 0.04–0.5 帧对 10–32 帧），说明学到的记忆长度主要由参数化决定。两者一致的只有方向：都比初值更短（K6 三带的拟合指数从 0.775/0.5/0.225 变陡到 1.24/0.86/0.53，平均滞后从 17.6/32.0/41.9 帧缩到 9.6/20.9/32.1 帧；K5 从约 12/25/34 帧缩到 0.04/0.20/0.52 帧）。论文只能这样表述；记忆形状是否影响精度，以里程碑 C 的 H2 测试结果为准。
 - **H1–H3 已按 [PR #16](https://github.com/Casey-sketch-cyber/Multi-Band-Fractional-Memory/pull/16) 审定的统计口径计算。** H1 的 L/W 增益为 3.521%/7.862%，H2a 为 0.279%/1.940%，H2b 为 0.699%/5.754%。H3 的 W 组原始 95% 区间下限为 +1.683%，高于 −0.5% 界值。K0 的探索性比较在 L、W 两组均未达到等效。冻结协议的 S1 判据已满足，G1 由作者决定。原始区间及适用的 Holm 校正 p 值见[假设检验表](../fractional_motion_repair/results/revision/kernel_hypotheses.csv)。
-- **并行通道（不需要 GPU）**：T1.1（命题证明，含 (K − δ) * d 的注记，见 DECISIONS 2026-11-12）、T1.2（核族示意图）、T5.1（`submission_mathematics/` 骨架）。Claude 会先写这些。
+- **G1 已定：S1 线（作者 2026-11-25 同意）。** 题目和主张见 DECISIONS 2026-11-25。
+- **分工与下一步（作者 2026-11-25 决定）**：
+  - **Codex**：先做里程碑 D（基线主表、时长响应 T3.4、提速与效率表），再做里程碑 E。训练间隙按 [作图任务书](revision/FIGURE_BRIEF.md) 画图，F1–F6 现在就能做，F7、F8 等里程碑 D。
+  - **Gemini**：按 [写作任务书](revision/WRITING_BRIEF.md) 第 8 节的顺序 W1→W7 写论文，一个任务一个 PR。依赖里程碑 D、E 的地方先写 `\todo{}`。
+  - **Claude**：审查合并所有 PR，核对数学命题和每个数字的出处。
+  - 原"并行通道"里的 T1.1、T1.2、T5.1 分别并入写作任务 W2、作图 F2、写作任务 W1。
 - **汇总口径提醒**：协议第 7 节的序列级 MPJPE 先对各序列的窗口取均值，再对训练种子取均值。此次正式测试的毫米误差覆盖 411/1,363 条序列。
-- Claude 审查里程碑 C 结果后，由作者按协议第 8 节决定 G1。
 
 ## 已知条件
 
@@ -60,6 +64,12 @@
 - "DanceRouter"没有发表过，新稿不用这个名称，也不引用。
 
 ## 工作记录
+
+### 2026-11-25 · claude · claude/g1-s1-roles
+
+- **完成**：记录 G1（S1 线）和作者定的分工。写出 `docs/revision/WRITING_BRIEF.md`（给 Gemini：格式、故事、术语表、命题 P1–P4 与新增 P6、各节要点、已有数字、交付格式、任务顺序 W1–W7、自审清单）和 `docs/revision/FIGURE_BRIEF.md`（给 Codex：工作方式、按作者要求的风格规范、F1–F8 图清单与数据来源、审查要点）。`AGENTS.md` 加第 8 条分工。
+- **注意 / 坑**：写作任务书第 6 节的数字摘自 `kernel_hypotheses.csv`，Gemini 写进正文时仍要按文件核对。
+
 
 ### 2026-11-25 · claude · codex/t3-2-confirmatory-results（审查与合并）
 
