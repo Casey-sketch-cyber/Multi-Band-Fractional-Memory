@@ -69,6 +69,17 @@
 
 ## 工作记录
 
+### 2026-11-25 · Gemini · gemini/w1-manuscript-skeleton
+
+- **完成**：按 `docs/revision/WRITING_BRIEF.md` 完成写作任务 W1，搭建可编译的 `submission_mathematics/` 论文骨架：
+  - 复制 `submission/manuscript_source/Definitions/` 至 `submission_mathematics/Definitions/`（10 个模板文件，逐项保留）。
+  - 新建主文件 `submission_mathematics/manuscript.tex`，类选项 `\documentclass[mathematics,article,submit,moreauthors,pdftex]{Definitions/mdpi}`，写入 S1 暂定题目、`\todo{}` 占位宏、9 个正文小节与 3 个附录（A 证明、B 早期固定划分研究、C 补充表）、结尾声明占位符、Data Availability 初始正文及对齐任务书第 3 节的缩写表。
+  - 新建 `submission_mathematics/sections/` 下 12 个占位文件（`01_introduction.tex`–`09_conclusions.tex`、`appendix_a_proofs.tex`–`appendix_c_supplementary_tables.tex`）。
+  - 新建 `submission_mathematics/references.bib`，先收入已由 `submission/CITATION_VERIFICATION.md` 核验的 `li2021aist` 以验证 BibTeX 链路，其余文献留待 W2–W4 逐条核验后加入。
+- **验证**：在本地 TeX Live 2026（TinyTeX）执行完整四步编译（`pdflatex` → `bibtex` → `pdflatex` × 2），退出码 0，生成 3 页 PDF；`manuscript.log` 与 `manuscript.blg` 零错误、零警告、零未解析引用；已人工检查 3 页渲染结果后清理编译产物，未提交 PDF 与中间文件。
+- **下一步**：提交 W1 PR 交 Claude 审查合并；合并后依序推进 W2（第 3、4 节与附录 A）和 W3（第 5、6 节）。
+
+
 ### 2026-11-25 · claude · 审查 PR #21–#23
 
 - **完成**：合并 PR #21（T3.4，已把分析标签更正为预先指定的探索性分析）。退回 PR #23（SAITS 明显不如线性插值，需诊断并预先登记调参规则）和 PR #22（F1 三处设计修改），已登记在"待办"。

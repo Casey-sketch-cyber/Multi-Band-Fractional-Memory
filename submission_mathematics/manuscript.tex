@@ -1,0 +1,95 @@
+% Manuscript skeleton for MDPI Mathematics (regular submission).
+\documentclass[mathematics,article,submit,moreauthors,pdftex]{Definitions/mdpi}
+
+\firstpage{1}
+\makeatletter
+\setcounter{page}{\@firstpage}
+\makeatother
+\pubvolume{1}
+\issuenum{1}
+\articlenumber{0}
+\pubyear{2026}
+\copyrightyear{2026}
+\datereceived{}
+\dateaccepted{}
+\datepublished{}
+\setlength{\emergencystretch}{3em}
+\setlength{\headheight}{20pt}
+
+% Placeholder marker for pending sections, data, and author-supplied metadata.
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{[TODO: #1]}}}
+
+\Title{Learnable Tempered Fractional Kernels with Exact Endpoint Constraints for Long-Gap Skeletal Motion Imputation}
+
+\Author{\todo{Author to complete}}
+\AuthorNames{\todo{Author to complete}}
+\address{\todo{Author to complete}}
+\corres{\todo{Author to complete}}
+
+\abstract{\todo{W7: Abstract (single paragraph, at most 200 words, no citations).}}
+
+\keyword{\todo{W7: 3--10 keywords}}
+\MSC{\todo{W7: MSC codes}}
+
+\begin{document}
+
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_preliminaries}
+\input{sections/04_kernel_bridges}
+\input{sections/05_architecture}
+\input{sections/06_protocol}
+\input{sections/07_results}
+\input{sections/08_discussion}
+\input{sections/09_conclusions}
+
+\authorcontributions{\todo{Author to complete.}}
+
+\funding{\todo{Author to complete.}}
+
+\institutionalreview{\todo{Author to complete.}}
+
+\informedconsent{\todo{Author to complete.}}
+
+\dataavailability{The AIST++ dataset \cite{li2021aist} is available from the official GitHub release page (\url{https://github.com/google/aistplusplus_dataset}, \url{https://google.github.io/aistplusplus_dataset/}) subject to the AIST Dance Video Database terms of use. The source code, frozen experimental protocols, fold manifests, and aggregate result tables for this study are available at \url{https://github.com/Casey-sketch-cyber/Multi-Band-Fractional-Memory}. \todo{Author to confirm repository link, terms, and any additional dataset statements before submission.}}
+
+\acknowledgments{\todo{Author to complete.}}
+
+\conflictsofinterest{\todo{Author to complete.}}
+
+\abbreviations{Abbreviations}{
+The following abbreviations are used in this manuscript:\\
+\noindent
+\begin{tabular}{@{}ll}
+AIST++ & Multi-modal 3D dance-motion dataset\\
+CI & Confidence interval\\
+CT & Continued training baseline\\
+ECB & Endpoint-constrained kernel bridge\\
+ECB-Exp & Endpoint-constrained bridge with mean-lag-matched exponential kernels\\
+ECB-Free & Endpoint-constrained bridge with free nonnegative 97-tap kernels\\
+ECB-GL & Endpoint-constrained bridge with fixed-order Gr\"unwald--Letnikov kernels\\
+ECB-K0 & Endpoint-constrained instantaneous cross-joint velocity regression control\\
+ECB-TGL & Endpoint-constrained bridge with three-band learnable tempered GL kernels\\
+ECB-TGL1 & Endpoint-constrained bridge with a single-band learnable tempered GL kernel\\
+ECB-U & Endpoint-constrained bridge with 9/33/97-tap uniform windows\\
+ECB-U$'$ & Endpoint-constrained bridge with 51/65/97-tap uniform windows\\
+GL & Gr\"unwald--Letnikov\\
+MPJPE & Mean per-joint position error\\
+TCN & Temporal convolutional network
+\end{tabular}}
+
+\appendixtitles{yes}
+\appendixstart
+\appendix
+
+\input{sections/appendix_a_proofs}
+\input{sections/appendix_b_early_study}
+\input{sections/appendix_c_supplementary_tables}
+
+\begin{adjustwidth}{-\extralength}{0cm}
+\reftitle{References}
+\externalbibliography{yes}
+\bibliography{references}
+\end{adjustwidth}
+
+\end{document}
