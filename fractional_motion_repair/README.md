@@ -267,6 +267,54 @@ margin. K0 equivalence is explicitly labelled exploratory G1 evidence.
 `kernel_ablation_summary.csv` and `kernel_inference_manifest.json` record
 aggregation and decision evidence. The author makes the G1 decision.
 
+### Milestone D baseline comparison
+
+The T3.3 grid reuses the T3.2 test split, sequence order, 128-frame windows
+at stride 128, mask seeds, and evaluation runtime. It keeps B0 and B3_K5
+from the completed T3.2 results. Train the new methods on the inner
+training split and select checkpoints on the inner validation split.
+
+Use a separate environment with Python 3.12 and the same PyTorch/CUDA
+versions as T3.2, then install `../requirements-baselines.txt`. The SAITS
+adapter uses the [PyPOTS 1.5 backbone](https://github.com/WenjieDu/PyPOTS/blob/v1.5/README.md)
+at 128 steps and 51 features with its joint ORT/MIT objective. All neural
+baselines use the same motion masks, 24-epoch cap, patience 5 and mixed
+inner-validation checkpoint selection. PCHIP interpolates visible
+anchors and extends the nearest observed value at one-sided boundaries.
+
+From the reproduction directory, wait for each command to finish before
+starting the next. Within each queue, one worker runs on each A6000.
+
+```bash
+export OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 OPENBLAS_NUM_THREADS=2
+python -B src/smoke_external_baselines.py
+python -B scripts/run_native_baselines.py queue --source src \
+  --cache data/raw60 --ignore-list data/downloads/ignore_list.txt \
+  --runs runs/baseline_revision --state runs/baseline_state/native
+python -B scripts/run_baseline_phase.py train-saits --source src \
+  --cache data/raw60 --ignore-list data/downloads/ignore_list.txt \
+  --runs runs/baseline_revision --state runs/baseline_state/saits
+python -B src/baseline_test.py freeze --runs runs/baseline_revision \
+  --kernel-freeze runs/kernel_test/test_freeze.json \
+  --kernel-summary runs/kernel_test/summary --decisions ../docs/DECISIONS.md \
+  --out-dir runs/baseline_test
+python -B scripts/run_baseline_phase.py evaluate --source src \
+  --runs runs/baseline_revision --state runs/baseline_state/test \
+  --freeze runs/baseline_test/test_freeze.json
+python -B src/baseline_test.py summarize --freeze runs/baseline_test/test_freeze.json \
+  --out-dir runs/baseline_test/summary
+python -B src/aggregate_main_table.py --freeze runs/baseline_test/test_freeze.json \
+  --baseline-summary runs/baseline_test/summary --kernel-summary runs/kernel_test/summary \
+  --out-dir results/revision
+```
+
+The SAITS queue produces a seven-method mixed-mask inner-validation check
+on fold 0, seed 20261201. The baseline evaluator verifies all 60 trained
+checkpoints before opening the held-out data. Keep both freezes and
+sequence-level tables on the experiment server. A test cell with an intent
+record and no result needs review before any rerun. The public main table
+uses sequence-equal means and labels its L/W intervals as descriptive.
+
 ### Additional evaluation metrics
 
 `evaluate_detailed(..., extended_metrics=True)` computes the following fields
