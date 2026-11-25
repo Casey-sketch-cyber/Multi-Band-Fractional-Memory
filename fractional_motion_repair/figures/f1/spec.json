@@ -1,0 +1,67 @@
+{
+  "meta": {
+    "id": "ecb-tgl-fig1",
+    "title": "Endpoint-constrained kernel bridge for skeletal motion imputation",
+    "system": {"name": "ECB-TGL"},
+    "family": "ai",
+    "venue": "cvpr",
+    "figure_kind": "whole-system",
+    "kind": "architecture",
+    "column": "double",
+    "width_pt": 523.559,
+    "max_height_pt": 150,
+    "template": "ai",
+    "direction": "left-right",
+    "palette": "custom",
+    "font": "arial",
+    "step_markers": "none",
+    "language": "en",
+    "caption_draft": "ECB-TGL completes masked 128-frame AIST++ skeletal windows by applying learnable tempered Grünwald–Letnikov (GL) kernel features and input and output endpoint constraints to the long-gap temporal convolutional network (TCN), then routing the two experts by gap duration while preserving observed joints.",
+    "version": 1,
+    "ai": {
+      "kinds": ["stage-pipeline", "model-anatomy"],
+      "subfield": "vision",
+      "subfield2": "science-engineering",
+      "arrangement": "pipeline-row",
+      "grouping": ["whitespace"],
+      "samples": "none",
+      "materials": ["Original schematic pose sequences, tap coefficients, and residual traces"]
+    },
+    "notes": "CVPR exemplars guide composition. The print width follows the MDPI A4 two-margin layout in adjustwidth, giving 184.7 mm from the archived class."
+  },
+  "style_overrides": {
+    "palette_roles": {
+      "canvas": "#ffffff",
+      "module": "#f3f5f6",
+      "accent": "#e3f0ee",
+      "stroke": "#6c7680",
+      "text": "#27333d",
+      "arrow": "#56636d",
+      "arrow-accent": "#216d72"
+    }
+  },
+  "nodes": [
+    {"id": "masked-poses", "label": "Masked poses", "kind": "icon", "role": "existing"},
+    {"id": "linear-interpolation", "label": "Linear interpolation", "kind": "module", "role": "existing", "text_lines": ["Linear", "interpolation"]},
+    {"id": "tempered-kernel-bands", "label": "Tempered kernel bands", "kind": "module", "role": "novel", "emphasis": "accent", "text_lines": ["Tempered", "kernel bands"]},
+    {"id": "input-endpoint-bridge", "label": "Input endpoint bridge", "kind": "module", "role": "novel", "text_lines": ["Input endpoint", "bridge"]},
+    {"id": "long-gap-tcn", "label": "Long-gap TCN", "kind": "compute", "role": "existing"},
+    {"id": "output-endpoint-projection", "label": "Output endpoint projection", "kind": "module", "role": "novel", "emphasis": "accent", "text_lines": ["Output endpoint", "projection"]},
+    {"id": "short-gap-tcn", "label": "Short-gap TCN", "kind": "compute", "role": "existing"},
+    {"id": "duration-routing", "label": "Duration routing", "kind": "module", "role": "existing", "text_lines": ["Duration", "routing"]},
+    {"id": "completed-poses", "label": "Completed poses", "kind": "icon", "role": "existing"}
+  ],
+  "edges": [
+    {"id": "observed-to-linear", "from": "masked-poses", "to": "linear-interpolation", "kind": "data", "weight": "normal"},
+    {"id": "linear-to-bands", "from": "linear-interpolation", "to": "tempered-kernel-bands", "kind": "data", "weight": "main"},
+    {"id": "bands-to-bridge", "from": "tempered-kernel-bands", "to": "input-endpoint-bridge", "kind": "data", "weight": "main"},
+    {"id": "bridge-to-long", "from": "input-endpoint-bridge", "to": "long-gap-tcn", "kind": "data", "weight": "main"},
+    {"id": "long-to-projection", "from": "long-gap-tcn", "to": "output-endpoint-projection", "kind": "data", "weight": "main"},
+    {"id": "projection-to-router", "from": "output-endpoint-projection", "to": "duration-routing", "kind": "data", "weight": "main"},
+    {"id": "linear-to-short", "from": "linear-interpolation", "to": "short-gap-tcn", "kind": "data", "route": "orthogonal", "from_side": "bottom"},
+    {"id": "short-to-router", "from": "short-gap-tcn", "to": "duration-routing", "kind": "data", "route": "orthogonal", "to_side": "bottom"},
+    {"id": "router-to-completed", "from": "duration-routing", "to": "completed-poses", "kind": "data", "weight": "main"}
+  ],
+  "legend": {"mode": "none"},
+  "notes": "The output projection stage includes adding the constrained residual to the linear interpolant and retaining observed coordinates. Mask inputs and per-band mixing are described in the methods text."
+}
