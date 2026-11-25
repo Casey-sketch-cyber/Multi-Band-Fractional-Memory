@@ -1,4 +1,7 @@
-"""T3.4 post hoc limb-duration gains from the frozen T3.2 summary.
+"""T3.4 prespecified exploratory limb-duration gains from the frozen T3.2 summary.
+
+The frozen protocol (section 9) lists this analysis as exploratory before any
+test data existed, so it is labelled exploratory_prespecified, not post hoc.
 
 Each input MPJPE is the mean over sequences after averaging each sequence's
 windows and training seeds. Report the ratio of these means, as in the
@@ -80,7 +83,7 @@ def duration_response(summary: Path) -> list[dict[str, object]]:
                 "baseline_mpjpe_window_mean": baseline_score,
                 "method_mpjpe_window_mean": method_score,
                 "gain_percent": 100 * (baseline_score - method_score) / baseline_score,
-                "analysis_stage": "post_hoc",
+                "analysis_stage": "exploratory_prespecified",
             })
     return result
 
